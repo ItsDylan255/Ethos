@@ -1,6 +1,8 @@
 package com.example.ethos.ui
 
+import com.example.ethos.data.Habit
 import com.example.ethos.data.HabitSchedule
+import com.example.ethos.data.HabitType
 import com.example.ethos.data.Reminder
 import com.example.ethos.data.ReminderMode
 import com.example.ethos.data.RecurrenceType
@@ -12,6 +14,27 @@ import java.util.Locale
 val WEEKDAY_SHORT = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
 val DATE_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("d. MMM yyyy", Locale.GERMAN)
 val TIME_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+/** Symbol is derived automatically from the habit type; there is no manual selection. */
+fun habitSymbol(type: HabitType): String = if (type == HabitType.BUILD) "🌱" else "🚫"
+
+fun Habit.displayTitle(): String = "${habitSymbol(type)} $title"
+
+val BUILD_LAW_LABELS = listOf("Offensichtlich machen", "Attraktiv machen", "Einfach machen", "Befriedigend machen")
+val AVOID_LAW_LABELS = listOf("Unsichtbar machen", "Unattraktiv machen", "Schwierig machen", "Unbefriedigend machen")
+
+val BUILD_LAW_HINTS = listOf(
+    "Wann und wo machst du es? Woran wirst du erinnert?",
+    "Womit verbindest du es, damit es dir Freude macht?",
+    "Wie machst du den Start so leicht wie möglich?",
+    "Wie belohnst du dich direkt danach?",
+)
+val AVOID_LAW_HINTS = listOf(
+    "Wie entfernst du die Auslöser aus deinem Umfeld?",
+    "Woran erinnerst du dich, damit es seinen Reiz verliert?",
+    "Welche Hürde baust du davor ein?",
+    "Welche Konsequenz macht es unangenehm?",
+)
 
 fun scheduleSummary(schedule: HabitSchedule?): String =
     when (schedule?.recurrenceType ?: RecurrenceType.DAILY) {

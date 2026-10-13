@@ -12,38 +12,24 @@ enum class RecurrenceType { DAILY, WEEKDAYS, TIMES_PER_WEEK }
 enum class LogStatus { COMPLETED, FAILED }
 enum class ReminderMode { FIXED_TIMES, FIXED_INTERVAL, RANDOM_INTERVAL }
 
-@Entity(tableName = "categories")
-data class Category(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val name: String,
-    val icon: String,
-    val color: Long,
-    val sortOrder: Int = 0,
-)
-
-@Entity(
-    tableName = "habits",
-    foreignKeys = [
-        ForeignKey(
-            entity = Category::class,
-            parentColumns = ["id"],
-            childColumns = ["categoryId"],
-            onDelete = ForeignKey.SET_NULL,
-        ),
-    ],
-    indices = [Index("categoryId")],
-)
+@Entity(tableName = "habits")
 data class Habit(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
     val description: String? = null,
-    /** Emoji symbol (spec 2.1 lists "Symbol" for habits). */
-    val icon: String = "",
     val type: HabitType = HabitType.BUILD,
-    val categoryId: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val isArchived: Boolean = false,
     val sortOrder: Int = 0,
+    /**
+     * The four laws of behavior change, as concrete personal strategies.
+     * BUILD: 1 obvious, 2 attractive, 3 easy, 4 satisfying.
+     * AVOID: 1 invisible, 2 unattractive, 3 difficult, 4 unsatisfying.
+     */
+    val law1: String = "",
+    val law2: String = "",
+    val law3: String = "",
+    val law4: String = "",
 )
 
 @Entity(

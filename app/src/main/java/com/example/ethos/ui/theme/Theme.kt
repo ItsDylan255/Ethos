@@ -17,28 +17,34 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ethos.data.HabitType
 import com.example.ethos.data.ThemeMode
 
+// Cards are white on a soft grey canvas (light) / slightly lifted on near-black (dark).
 private val LightColors = lightColorScheme(
     primary = Color(0xFF5E6AD2),
     onPrimary = Color.White,
     primaryContainer = Color(0xFFE6E8FA),
     onPrimaryContainer = Color(0xFF2B3170),
-    secondaryContainer = Color(0xFFEDEEF1),
+    secondaryContainer = Color(0xFFE9EAF0),
     onSecondaryContainer = Color(0xFF1A1B1E),
-    background = Color(0xFFFCFCFD),
+    tertiary = Color(0xFFD9822B),
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFFBEBD7),
+    onTertiaryContainer = Color(0xFF6B3A08),
+    background = Color(0xFFF6F7F9),
     onBackground = Color(0xFF1A1B1E),
-    surface = Color(0xFFFCFCFD),
+    surface = Color(0xFFF6F7F9),
     onSurface = Color(0xFF1A1B1E),
-    surfaceVariant = Color(0xFFF1F2F4),
+    surfaceVariant = Color(0xFFEEF0F4),
     onSurfaceVariant = Color(0xFF6B6F76),
     surfaceContainerLowest = Color.White,
-    surfaceContainerLow = Color(0xFFF7F8F9),
-    surfaceContainer = Color(0xFFF3F4F6),
-    surfaceContainerHigh = Color(0xFFEFF0F2),
-    surfaceContainerHighest = Color(0xFFE9EAED),
+    surfaceContainerLow = Color.White,
+    surfaceContainer = Color.White,
+    surfaceContainerHigh = Color.White,
+    surfaceContainerHighest = Color(0xFFEEF0F3),
     outline = Color(0xFFB4B8BF),
-    outlineVariant = Color(0xFFE4E6EA),
+    outlineVariant = Color(0xFFE3E5EA),
     error = Color(0xFFD14343),
     onError = Color.White,
 )
@@ -50,25 +56,29 @@ private val DarkColors = darkColorScheme(
     onPrimaryContainer = Color(0xFFDCDFFA),
     secondaryContainer = Color(0xFF26282C),
     onSecondaryContainer = Color(0xFFE6E7EA),
+    tertiary = Color(0xFFE8A35C),
+    onTertiary = Color(0xFF1F1204),
+    tertiaryContainer = Color(0xFF4A2F12),
+    onTertiaryContainer = Color(0xFFFBE3C6),
     background = Color(0xFF0F1011),
     onBackground = Color(0xFFE6E7EA),
     surface = Color(0xFF0F1011),
     onSurface = Color(0xFFE6E7EA),
-    surfaceVariant = Color(0xFF1B1C1F),
+    surfaceVariant = Color(0xFF222428),
     onSurfaceVariant = Color(0xFF8A8F98),
     surfaceContainerLowest = Color(0xFF0B0C0D),
-    surfaceContainerLow = Color(0xFF131415),
-    surfaceContainer = Color(0xFF17181A),
-    surfaceContainerHigh = Color(0xFF1D1E21),
-    surfaceContainerHighest = Color(0xFF242629),
+    surfaceContainerLow = Color(0xFF17181A),
+    surfaceContainer = Color(0xFF1B1C1F),
+    surfaceContainerHigh = Color(0xFF202225),
+    surfaceContainerHighest = Color(0xFF26282B),
     outline = Color(0xFF4A4D54),
-    outlineVariant = Color(0xFF25272B),
+    outlineVariant = Color(0xFF2A2C31),
     error = Color(0xFFF07178),
     onError = Color(0xFF0F1011),
 )
 
 private val EthosTypography = Typography(
-    headlineMedium = TextStyle(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp),
+    headlineMedium = TextStyle(fontSize = 28.sp, lineHeight = 34.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.6).sp),
     headlineSmall = TextStyle(fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.4).sp),
     titleLarge = TextStyle(fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
     titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium, letterSpacing = (-0.1).sp),
@@ -77,16 +87,25 @@ private val EthosTypography = Typography(
     bodySmall = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Normal),
     labelLarge = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),
     labelMedium = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
-    labelSmall = TextStyle(fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.5.sp),
+    labelSmall = TextStyle(fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.4.sp),
 )
 
 private val EthosShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(6.dp),
-    medium = RoundedCornerShape(8.dp),
-    large = RoundedCornerShape(12.dp),
-    extraLarge = RoundedCornerShape(16.dp),
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
+
+/** Accent per habit type: indigo for building, amber for breaking a habit. */
+@Composable
+fun typeColor(type: HabitType): Color =
+    if (type == HabitType.BUILD) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
+
+@Composable
+fun typeContainerColor(type: HabitType): Color =
+    if (type == HabitType.BUILD) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer
 
 @Composable
 fun EthosTheme(

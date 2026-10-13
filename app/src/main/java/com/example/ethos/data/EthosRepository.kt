@@ -11,7 +11,6 @@ class EthosRepository(
 ) {
     private val habits = db.habitDao()
     private val logs = db.logDao()
-    private val categories = db.categoryDao()
     private val reminders = db.reminderDao()
 
     // ---- Habits ----
@@ -62,19 +61,6 @@ class EthosRepository(
             ),
         )
     }
-
-    // ---- Categories ----
-    fun observeCategories(): Flow<List<Category>> = categories.observeAll()
-
-    suspend fun saveCategory(category: Category) {
-        if (category.id == 0L) {
-            categories.insert(category.copy(sortOrder = categories.nextSortOrder()))
-        } else {
-            categories.update(category)
-        }
-    }
-
-    suspend fun deleteCategory(category: Category) = categories.delete(category)
 
     // ---- Reminders ----
     fun observeReminders(): Flow<List<Reminder>> = reminders.observeAll()

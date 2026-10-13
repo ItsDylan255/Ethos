@@ -1,10 +1,10 @@
 package com.example.ethos.ui.reminders
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,8 +31,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ethos.ui.AppViewModelProvider
 import com.example.ethos.ui.components.EmptyState
+import com.example.ethos.ui.components.EthosCard
 import com.example.ethos.ui.components.EthosTopBar
-import com.example.ethos.ui.components.HairlineDivider
+import com.example.ethos.ui.components.Pill
 import com.example.ethos.ui.reminderSummary
 import java.time.Instant
 import java.time.ZoneId
@@ -64,10 +65,13 @@ fun RemindersScreen(
         if (items.isEmpty()) {
             EmptyState("Noch keine Erinnerungen.\nSie können an ein Habit gebunden oder frei sein.", Modifier.padding(padding))
         } else {
-            LazyColumn(Modifier.padding(padding)) {
+            LazyColumn(
+                Modifier.padding(padding),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 items(items, key = { it.reminder.id }) { item ->
-                    ReminderRow(item, vm, onClick = { onEditReminder(item.reminder.id) })
-                    HairlineDivider()
+                    ReminderCard(item, vm, onClick = { onEditReminder(item.reminder.id) })
                 }
             }
         }
@@ -75,41 +79,44 @@ fun RemindersScreen(
 }
 
 @Composable
-private fun ReminderRow(item: ReminderItem, vm: RemindersViewModel, onClick: () -> Unit) {
+private fun ReminderCard(item: ReminderItem, vm: RemindersViewModel, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
     val r = item.reminder
     var menu by remember { mutableStateOf(false) }
     val now = System.currentTimeMillis()
     val paused = r.pausedUntil != null && r.pausedUntil > now
-    val status = when {
-        !r.isEnabled -> "Aus"
-        paused -> "Pausiert bis ${fmt(r.pausedUntil!!)}"
-        r.nextTriggerAt != null -> "Nächste: ${fmt(r.nextTriggerAt)}"
-        else -> "Nichts geplant"
+    val (status, statusColor) = when {
+        !r.isEnabled -> "Aus" to cs.onSurfaceVariant
+        paused -> "Pausiert bis ${fmt(r.pausedUntil!!)}" to cs.tertiary
+        r.nextTriggerAt != null -> "Nächste: ${fmt(r.nextTriggerAt)}" to cs.primary
+        else -> "Nichts geplant" to cs.onSurfaceVariant
     }
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(start = 16.dp, top = 10.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    EthosCard(
+        onClick = onClick,
+        contentPadding = PaddingValues(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
     ) {
-        Column(Modifier.weight(1f)) {
-            Text(r.title.ifBlank { item.habitTitle ?: "Erinnerung" }, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                listOfNotNull(item.habitTitle?.takeIf { r.title.isNotBlank() }, reminderSummary(r)).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Switch(checked = r.isEnabled, onCheckedChange = { vm.setEnabled(r, it) })
-        Box {
-            IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Mehr") }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(text = { Text("Bearbeiten") }, onClick = { menu = false; onClick() })
-                if (paused) {
-                    DropdownMenuItem(text = { Text("Pause beenden") }, onClick = { menu = false; vm.resume(r) })
-                } else {
-                    DropdownMenuItem(text = { Text("Bis morgen pausieren") }, onClick = { menu = false; vm.pauseUntilTomorrow(r) })
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(r.title.ifBlank { item.habitTitle ?: "Erinnerung" }, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    listOfNotNull(item.habitTitle?.takeIf { r.title.isNotBlank() }, reminderSummary(r)).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = cs.onSurfaceVariant,
+                )
+                Pill(status, statusColor)
+            }
+            Switch(checked = r.isEnabled, onCheckedChange = { vm.setEnabled(r, it) })
+            Box {
+                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Mehr") }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text("Bearbeiten") }, onClick = { menu = false; onClick() })
+                    if (paused) {
+                        DropdownMenuItem(text = { Text("Pause beenden") }, onClick = { menu = false; vm.resume(r) })
+                    } else {
+                        DropdownMenuItem(text = { Text("Bis morgen pausieren") }, onClick = { menu = false; vm.pauseUntilTomorrow(r) })
+                    }
+                    DropdownMenuItem(text = { Text("Löschen") }, onClick = { menu = false; vm.delete(r) })
                 }
-                DropdownMenuItem(text = { Text("Löschen") }, onClick = { menu = false; vm.delete(r) })
             }
         }
     }

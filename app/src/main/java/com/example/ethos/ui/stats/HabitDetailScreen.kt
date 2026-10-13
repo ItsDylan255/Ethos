@@ -6,7 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -28,7 +28,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,12 +44,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ethos.data.HabitType
 import com.example.ethos.data.LogStatus
 import com.example.ethos.domain.DayState
+import com.example.ethos.ui.AVOID_LAW_LABELS
 import com.example.ethos.ui.AppViewModelProvider
+import com.example.ethos.ui.BUILD_LAW_LABELS
 import com.example.ethos.ui.WEEKDAY_SHORT
+import com.example.ethos.ui.components.CardTitle
+import com.example.ethos.ui.components.EthosCard
 import com.example.ethos.ui.components.EthosTopBar
-import com.example.ethos.ui.components.HairlineDivider
-import com.example.ethos.ui.components.SectionLabel
+import com.example.ethos.ui.displayTitle
 import com.example.ethos.ui.scheduleSummary
+import com.example.ethos.ui.theme.typeColor
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -73,7 +76,7 @@ fun HabitDetailScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             EthosTopBar(
-                title = s?.let { listOf(it.habit.icon, it.habit.title).filter { p -> p.isNotBlank() }.joinToString(" ") } ?: "",
+                title = s?.habit?.displayTitle() ?: "",
                 subtitle = s?.let { scheduleSummary(it.schedule) },
                 onBack = onBack,
                 actions = {
@@ -87,33 +90,63 @@ fun HabitDetailScreen(
         },
     ) { padding ->
         if (s == null) return@Scaffold
-        Column(Modifier.padding(padding).verticalScroll(rememberScrollState())) {
-            SummaryRow(s)
-            HairlineDivider()
-            MonthHeader(
-                month = s.month,
-                canGoForward = s.month.isBefore(YearMonth.from(s.today)),
-                onPrevious = vm::previousMonth,
-                onNext = vm::nextMonth,
-            )
-            MonthGrid(s, onPick = { editing = it })
-            Text(
-                "Tippe auf einen Tag, um ihn nachträglich zu korrigieren.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
+        val accent = typeColor(s.habit.type)
+        Column(
+            Modifier
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SummaryRow(s, accent)
+
+            EthosCard(spacing = 8.dp) {
+                MonthHeader(
+                    month = s.month,
+                    canGoForward = s.month.isBefore(YearMonth.from(s.today)),
+                    onPrevious = vm::previousMonth,
+                    onNext = vm::nextMonth,
+                )
+                MonthGrid(s, accent, onPick = { editing = it })
+                Text(
+                    "Tippe auf einen Tag, um ihn nachträglich zu korrigieren.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             if (s.weeks.isNotEmpty()) {
-                HairlineDivider()
-                SectionLabel("Wochenziele")
-                s.weeks.forEach { w ->
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        Text("KW ${w.weekNumber}", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            "${w.done} von ${w.target}" + if (w.met) "  ✓" else "",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = if (w.met) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                EthosCard(spacing = 10.dp) {
+                    CardTitle("Wochenziele")
+                    s.weeks.forEach { w ->
+                        Row(Modifier.fillMaxWidth()) {
+                            Text("KW ${w.weekNumber}", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                "${w.done} von ${w.target}" + if (w.met) "  ✓" else "",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (w.met) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+
+            val laws = listOf(s.habit.law1, s.habit.law2, s.habit.law3, s.habit.law4)
+            if (laws.any { it.isNotBlank() }) {
+                val labels = if (s.habit.type == HabitType.BUILD) BUILD_LAW_LABELS else AVOID_LAW_LABELS
+                EthosCard(spacing = 12.dp) {
+                    CardTitle("Meine Strategie")
+                    laws.forEachIndexed { index, text ->
+                        if (text.isNotBlank()) {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    "${index + 1}. ${labels[index]}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = accent,
+                                )
+                                Text(text, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
                     }
                 }
             }
@@ -132,29 +165,31 @@ fun HabitDetailScreen(
 }
 
 @Composable
-private fun SummaryRow(s: DetailUiState) {
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(vertical = 16.dp)) {
-        val first = if (s.streak != null) "${s.streak}" to "Tage in Folge"
-        else "${s.weekDone ?: 0}/${s.schedule?.weeklyTarget ?: 1}" to "Diese Woche"
-        StatCell(first.first, first.second, Modifier.weight(1f))
-        VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        StatCell(s.rate30?.let { "$it %" } ?: "–", "30 Tage", Modifier.weight(1f))
-        VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        StatCell(s.rateAll?.let { "$it %" } ?: "–", "Gesamt", Modifier.weight(1f))
+private fun SummaryRow(s: DetailUiState, accent: Color) {
+    val first = if (s.streak != null) "${s.streak}" to "Tage in Folge"
+    else "${s.weekDone ?: 0}/${s.schedule?.weeklyTarget ?: 1}" to "Diese Woche"
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        StatCell(first.first, first.second, accent, Modifier.weight(1f))
+        StatCell(s.rate30?.let { "$it %" } ?: "–", "30 Tage", accent, Modifier.weight(1f))
+        StatCell(s.rateAll?.let { "$it %" } ?: "–", "Gesamt", accent, Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun StatCell(value: String, label: String, modifier: Modifier) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.headlineSmall)
+private fun StatCell(value: String, label: String, accent: Color, modifier: Modifier) {
+    EthosCard(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(value, style = MaterialTheme.typography.headlineSmall, color = accent)
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun MonthHeader(month: YearMonth, canGoForward: Boolean, onPrevious: () -> Unit, onNext: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onPrevious) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Vorheriger Monat") }
         Text(
             month.format(MONTH_FMT),
@@ -169,12 +204,12 @@ private fun MonthHeader(month: YearMonth, canGoForward: Boolean, onPrevious: () 
 }
 
 @Composable
-private fun MonthGrid(s: DetailUiState, onPick: (LocalDate) -> Unit) {
+private fun MonthGrid(s: DetailUiState, accent: Color, onPick: (LocalDate) -> Unit) {
     val first = s.month.atDay(1)
     val offset = first.dayOfWeek.value - 1
     val days = s.month.lengthOfMonth()
     val rows = (offset + days + 6) / 7
-    Column(Modifier.padding(horizontal = 12.dp)) {
+    Column {
         Row(Modifier.fillMaxWidth()) {
             WEEKDAY_SHORT.forEach {
                 Text(
@@ -196,6 +231,7 @@ private fun MonthGrid(s: DetailUiState, onPick: (LocalDate) -> Unit) {
                         DayCell(
                             day = day,
                             state = s.stateOn(date),
+                            accent = accent,
                             isToday = date == s.today,
                             enabled = !date.isAfter(s.today),
                             onClick = { onPick(date) },
@@ -211,11 +247,19 @@ private fun MonthGrid(s: DetailUiState, onPick: (LocalDate) -> Unit) {
 }
 
 @Composable
-private fun DayCell(day: Int, state: DayState?, isToday: Boolean, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
+private fun DayCell(
+    day: Int,
+    state: DayState?,
+    accent: Color,
+    isToday: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier,
+) {
     val cs = MaterialTheme.colorScheme
     val (bg, fg) = when (state) {
-        DayState.COMPLETED -> cs.primary to cs.onPrimary
-        DayState.AVOIDED -> cs.primary.copy(alpha = 0.15f) to cs.onSurface
+        DayState.COMPLETED -> accent to cs.onPrimary
+        DayState.AVOIDED -> accent.copy(alpha = 0.18f) to cs.onSurface
         DayState.FAILED -> cs.error to cs.onError
         DayState.NOT_RECORDED -> Color.Transparent to cs.onSurfaceVariant
         null -> Color.Transparent to cs.onSurface.copy(alpha = if (enabled) 0.6f else 0.3f)

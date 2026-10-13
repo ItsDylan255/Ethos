@@ -1,11 +1,16 @@
 package com.example.ethos.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
@@ -44,9 +49,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.ethos.data.HabitType
 import com.example.ethos.ui.DATE_FMT
+import com.example.ethos.ui.habitSymbol
+import com.example.ethos.ui.theme.typeContainerColor
 import com.example.ethos.ui.TIME_FMT
 import com.example.ethos.ui.WEEKDAY_SHORT
 import java.time.Instant
@@ -65,7 +74,10 @@ fun EthosTopBar(
     TopAppBar(
         title = {
             Column {
-                Text(title, style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    title,
+                    style = if (onBack == null) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineSmall,
+                )
                 if (subtitle != null) {
                     Text(
                         subtitle,
@@ -83,7 +95,10 @@ fun EthosTopBar(
             }
         },
         actions = actions,
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.background,
+        ),
     )
 }
 
@@ -98,7 +113,7 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
         text.uppercase(),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+        modifier = modifier.padding(horizontal = 4.dp, vertical = 6.dp),
     )
 }
 
@@ -246,23 +261,78 @@ fun TimeField(label: String, time: LocalTime, onChange: (LocalTime) -> Unit) {
     }
 }
 
-private val SUGGESTED_ICONS = listOf("💧", "🏃", "📚", "🧘", "🚭", "🍬", "📵", "💤", "✍️", "🎯", "🥗", "🍷")
+/** Rounded surface with a hairline border; the basic building block of the redesigned screens. */
+@Composable
+fun EthosCard(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+    spacing: androidx.compose.ui.unit.Dp = 0.dp,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val cs = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(16.dp)
+    Column(
+        modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(cs.surfaceContainerLow)
+            .border(1.dp, cs.outlineVariant, shape)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(spacing),
+        horizontalAlignment = horizontalAlignment,
+        content = content,
+    )
+}
+
+/** Small tinted label. */
+@Composable
+fun Pill(text: String, color: Color, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelSmall,
+        color = color,
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(color.copy(alpha = 0.12f))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+    )
+}
 
 @Composable
-fun IconSuggestions(selected: String, onSelect: (String) -> Unit) {
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        SUGGESTED_ICONS.forEach { emoji ->
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(
-                        if (emoji == selected) MaterialTheme.colorScheme.secondaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant,
-                    )
-                    .clickable { onSelect(emoji) },
-                contentAlignment = Alignment.Center,
-            ) { Text(emoji) }
-        }
+fun ProgressBar(progress: Float, color: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(6.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .fillMaxHeight()
+                .clip(CircleShape)
+                .background(color),
+        )
     }
+}
+
+/** Tinted square with the type symbol (assigned automatically from the habit type). */
+@Composable
+fun TypeBadge(type: HabitType, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 40.dp) {
+    Box(
+        modifier
+            .size(size)
+            .clip(RoundedCornerShape(10.dp))
+            .background(typeContainerColor(type)),
+        contentAlignment = Alignment.Center,
+    ) { Text(habitSymbol(type)) }
+}
+
+@Composable
+fun CardTitle(text: String, modifier: Modifier = Modifier) {
+    Text(text, style = MaterialTheme.typography.titleMedium, modifier = modifier)
 }

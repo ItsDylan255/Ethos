@@ -10,19 +10,6 @@ import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface CategoryDao {
-    @Query("SELECT * FROM categories ORDER BY sortOrder, id")
-    fun observeAll(): Flow<List<Category>>
-
-    @Query("SELECT COALESCE(MAX(sortOrder), -1) + 1 FROM categories")
-    suspend fun nextSortOrder(): Int
-
-    @Insert suspend fun insert(category: Category): Long
-    @Update suspend fun update(category: Category)
-    @Delete suspend fun delete(category: Category)
-}
-
-@Dao
 interface HabitDao {
     @Transaction
     @Query("SELECT * FROM habits WHERE isArchived = :archived ORDER BY sortOrder, id")

@@ -41,7 +41,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ethos.data.ReminderMode
 import com.example.ethos.ui.AppViewModelProvider
+import com.example.ethos.ui.displayTitle
 import com.example.ethos.ui.TIME_FMT
+import com.example.ethos.ui.components.EthosCard
 import com.example.ethos.ui.components.EthosTopBar
 import com.example.ethos.ui.components.FormLabel
 import com.example.ethos.ui.components.HairlineDivider
@@ -90,9 +92,10 @@ fun ReminderEditScreen(
                 .padding(padding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+          EthosCard(spacing = 14.dp) {
             OutlinedTextField(
                 value = form.title,
                 onValueChange = { v -> vm.update { it.copy(title = v) } },
@@ -113,7 +116,7 @@ fun ReminderEditScreen(
                         FilterChip(
                             selected = form.habitId == h.id,
                             onClick = { vm.update { it.copy(habitId = h.id) } },
-                            label = { Text(listOf(h.icon, h.title).filter { s -> s.isNotBlank() }.joinToString(" ")) },
+                            label = { Text(h.displayTitle()) },
                         )
                     }
                 }
@@ -124,8 +127,9 @@ fun ReminderEditScreen(
                 )
             }
 
-            HairlineDivider()
+          }
 
+          EthosCard(spacing = 14.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 FormLabel("Modus")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -194,6 +198,9 @@ fun ReminderEditScreen(
                 }
             }
 
+          }
+
+          EthosCard(spacing = 14.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 FormLabel("Wochentage")
                 WeekdayPicker(form.weekdays, onChange = { v -> vm.update { it.copy(weekdays = v) } })
@@ -205,6 +212,7 @@ fun ReminderEditScreen(
                 onChange = { v -> vm.update { it.copy(snoozeMinutes = v) } },
                 step = 5, min = 5, max = 120, suffix = " Min",
             )
+          }
         }
     }
 
