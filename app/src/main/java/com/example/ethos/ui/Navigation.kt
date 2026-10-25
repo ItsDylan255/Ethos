@@ -31,6 +31,7 @@ import com.example.ethos.ui.habits.HabitEditScreen
 import com.example.ethos.ui.habits.HabitsScreen
 import com.example.ethos.ui.reminders.ReminderEditScreen
 import com.example.ethos.ui.reminders.RemindersScreen
+import com.example.ethos.ui.settings.SettingsScreen
 import com.example.ethos.ui.stats.HabitDetailScreen
 import com.example.ethos.ui.stats.StatsScreen
 import com.example.ethos.ui.today.TodayScreen
@@ -43,6 +44,7 @@ object Routes {
     const val HABIT_EDIT = "habit_edit/{id}"
     const val HABIT_DETAIL = "habit_detail/{id}"
     const val REMINDER_EDIT = "reminder_edit/{id}"
+    const val SETTINGS = "settings"
 
     fun habitEdit(id: Long = -1L) = "habit_edit/$id"
     fun habitDetail(id: Long) = "habit_detail/$id"
@@ -104,6 +106,7 @@ fun EthosRoot() {
                 TodayScreen(
                     onAddHabit = { nav.navigate(Routes.habitEdit()) },
                     onOpenHabit = { nav.navigate(Routes.habitDetail(it)) },
+                    onOpenSettings = { nav.navigate(Routes.SETTINGS) },
                 )
             }
             composable(Routes.HABITS) {
@@ -122,13 +125,23 @@ fun EthosRoot() {
                 )
             }
             composable(Routes.HABIT_EDIT, arguments = idArg) {
-                HabitEditScreen(onBack = { nav.popBackStack() })
+                HabitEditScreen(
+                    onBack = { nav.popBackStack() },
+                    onDeleted = {
+                        nav.popBackStack()
+                        // Came from the habit's detail page? That page is gone too.
+                        if (nav.currentDestination?.route == Routes.HABIT_DETAIL) nav.popBackStack()
+                    },
+                )
             }
             composable(Routes.HABIT_DETAIL, arguments = idArg) {
                 HabitDetailScreen(
                     onBack = { nav.popBackStack() },
                     onEdit = { nav.navigate(Routes.habitEdit(it)) },
                 )
+            }
+            composable(Routes.SETTINGS) {
+                SettingsScreen(onBack = { nav.popBackStack() })
             }
             composable(Routes.REMINDER_EDIT, arguments = idArg) {
                 ReminderEditScreen(onBack = { nav.popBackStack() })

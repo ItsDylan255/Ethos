@@ -1,5 +1,6 @@
 package com.example.ethos.ui.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +40,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -49,12 +51,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.ethos.data.HabitType
 import com.example.ethos.ui.DATE_FMT
-import com.example.ethos.ui.habitSymbol
+import com.example.ethos.ui.theme.typeColor
 import com.example.ethos.ui.theme.typeContainerColor
 import com.example.ethos.ui.TIME_FMT
 import com.example.ethos.ui.WEEKDAY_SHORT
@@ -320,6 +327,40 @@ fun ProgressBar(progress: Float, color: Color, modifier: Modifier = Modifier) {
     }
 }
 
+/** BUILD: circle with a check mark. AVOID: circle with a line through it. Drawn, not an emoji. */
+@Composable
+fun TypeSymbol(
+    type: HabitType,
+    modifier: Modifier = Modifier,
+    iconSize: androidx.compose.ui.unit.Dp = 24.dp,
+    color: Color = typeColor(type),
+) {
+    Canvas(modifier.size(iconSize)) {
+        val stroke = size.minDimension * 0.09f
+        val radius = size.minDimension / 2f - stroke / 2f
+        drawCircle(color = color, radius = radius, style = Stroke(width = stroke))
+        if (type == HabitType.BUILD) {
+            val w = size.width
+            val h = size.height
+            val check = Path().apply {
+                moveTo(w * 0.30f, h * 0.52f)
+                lineTo(w * 0.44f, h * 0.66f)
+                lineTo(w * 0.71f, h * 0.36f)
+            }
+            drawPath(check, color, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        } else {
+            val offset = radius * 0.7071f
+            drawLine(
+                color = color,
+                start = Offset(center.x - offset, center.y - offset),
+                end = Offset(center.x + offset, center.y + offset),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round,
+            )
+        }
+    }
+}
+
 /** Tinted square with the type symbol (assigned automatically from the habit type). */
 @Composable
 fun TypeBadge(type: HabitType, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 40.dp) {
@@ -329,10 +370,34 @@ fun TypeBadge(type: HabitType, modifier: Modifier = Modifier, size: androidx.com
             .clip(RoundedCornerShape(10.dp))
             .background(typeContainerColor(type)),
         contentAlignment = Alignment.Center,
-    ) { Text(habitSymbol(type)) }
+    ) { TypeSymbol(type, iconSize = size * 0.6f) }
 }
 
 @Composable
 fun CardTitle(text: String, modifier: Modifier = Modifier) {
     Text(text, style = MaterialTheme.typography.titleMedium, modifier = modifier)
+}
+
+/** Date picker that only allows days from [minDate] on (used for moving a habit to another day). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FutureDatePickerDialog(minDate: LocalDate, onPick: (LocalDate) -> Unit, onDismiss: () -> Unit) {
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = minDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                !Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneOffset.UTC).toLocalDate().isBefore(minDate)
+        },
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                state.selectedDateMillis?.let {
+                    onPick(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate())
+                }
+            }) { Text("Verschieben") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
+    ) { DatePicker(state = state) }
 }

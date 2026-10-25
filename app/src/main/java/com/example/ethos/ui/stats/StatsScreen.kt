@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,10 +14,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,21 +49,37 @@ fun StatsScreen(
     vm: StatsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val items by vm.items.collectAsStateWithLifecycle()
+    var tab by rememberSaveable { mutableStateOf(0) }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EthosTopBar(title = "Statistik", subtitle = "Diese Woche und die letzten 30 Tage") },
+        topBar = {
+            EthosTopBar(
+                title = "Statistik",
+                subtitle = if (tab == 0) "Diese Woche und die letzten 30 Tage" else "Alle Notizen auf einen Blick",
+            )
+        },
     ) { padding ->
-        if (items.isEmpty()) {
-            EmptyState("Noch keine Daten.", Modifier.padding(padding))
-        } else {
-            LazyColumn(
-                Modifier.padding(padding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                item { OverviewCard(items) }
-                items(items, key = { it.habit.id }) { item ->
-                    StatCard(item, onClick = { onOpenHabit(item.habit.id) })
+        Column(Modifier.padding(padding)) {
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                listOf("Übersicht", "Notizen").forEachIndexed { index, label ->
+                    SegmentedButton(
+                        selected = tab == index,
+                        onClick = { tab = index },
+                        shape = SegmentedButtonDefaults.itemShape(index, 2),
+                    ) { Text(label) }
+                }
+            }
+            when {
+                tab == 1 -> NotesView()
+                items.isEmpty() -> EmptyState("Noch keine Daten.")
+                else -> LazyColumn(
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    item { OverviewCard(items) }
+                    items(items, key = { it.habit.id }) { item ->
+                        StatCard(item, onClick = { onOpenHabit(item.habit.id) })
+                    }
                 }
             }
         }

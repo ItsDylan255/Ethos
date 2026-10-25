@@ -35,6 +35,11 @@ data class ReminderForm(
     val snoozeMinutes: Int = 10,
     val isEnabled: Boolean = true,
     val pausedUntil: Long? = null,
+    /** Daily limit for interval modes; null = unlimited. */
+    val maxPerDay: Int? = null,
+    /** Kept so that editing does not reset today's counter. */
+    val firedDate: String? = null,
+    val firedCount: Int = 0,
 ) {
     val canSave: Boolean
         get() = (title.isNotBlank() || habitId != null) &&
@@ -89,6 +94,9 @@ class ReminderEditViewModel(
                     } else null,
                     snoozeMinutes = f.snoozeMinutes,
                     pausedUntil = f.pausedUntil,
+                    maxPerDay = if (f.mode == ReminderMode.FIXED_TIMES) null else f.maxPerDay,
+                    firedDate = f.firedDate,
+                    firedCount = f.firedCount,
                 ),
             )
             onDone()
@@ -110,4 +118,7 @@ private fun Reminder.toForm() = ReminderForm(
     snoozeMinutes = snoozeMinutes,
     isEnabled = isEnabled,
     pausedUntil = pausedUntil,
+    maxPerDay = maxPerDay,
+    firedDate = firedDate,
+    firedCount = firedCount,
 )

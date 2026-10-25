@@ -8,14 +8,19 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [Habit::class, HabitSchedule::class, HabitLog::class, Reminder::class],
-    version = 2,
+    entities = [
+        Habit::class, HabitSchedule::class, HabitLog::class, Reminder::class, HabitNote::class,
+        HabitException::class,
+    ],
+    version = 6,
     exportSchema = true,
 )
 abstract class EthosDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
     abstract fun logDao(): LogDao
     abstract fun reminderDao(): ReminderDao
+    abstract fun noteDao(): NoteDao
+    abstract fun exceptionDao(): ExceptionDao
 
     companion object {
         /**
@@ -108,10 +113,61 @@ abstract class EthosDatabase : RoomDatabase() {
             }
         }
 
+        /** v2 -> v3: adds the per-day notes table. Purely additive, existing data is untouched. */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE habit_notes (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "habitId INTEGER NOT NULL, " +
+                        "localDate TEXT NOT NULL, " +
+                        "text TEXT NOT NULL, " +
+                        "createdAt INTEGER NOT NULL, " +
+                        "updatedAt INTEGER NOT NULL, " +
+                        "FOREIGN KEY (habitId) REFERENCES habits (id) ON UPDATE NO ACTION ON DELETE CASCADE)",
+                )
+                db.execSQL("CREATE UNIQUE INDEX index_habit_notes_habitId_localDate ON habit_notes (habitId, localDate)")
+            }
+        }
+
+        /** v3 -> v4: schedule exceptions (skip / move) and the catch-up flag. Purely additive. */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE habit_schedules ADD COLUMN catchUp INTEGER NOT NULL DEFAULT 0")
+                db.execSQL(
+                    "CREATE TABLE habit_exceptions (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "habitId INTEGER NOT NULL, " +
+                        "originDate TEXT NOT NULL, " +
+                        "kind TEXT NOT NULL, " +
+                        "targetDate TEXT, " +
+                        "createdAt INTEGER NOT NULL, " +
+                        "FOREIGN KEY (habitId) REFERENCES habits (id) ON UPDATE NO ACTION ON DELETE CASCADE)",
+                )
+                db.execSQL("CREATE UNIQUE INDEX index_habit_exceptions_habitId_originDate ON habit_exceptions (habitId, originDate)")
+            }
+        }
+
+        /** v4 -> v5: daily limit for interval reminders. Purely additive. */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE reminders ADD COLUMN maxPerDay INTEGER")
+                db.execSQL("ALTER TABLE reminders ADD COLUMN firedDate TEXT")
+                db.execSQL("ALTER TABLE reminders ADD COLUMN firedCount INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        /** v5 -> v6: personal motivation per habit. Purely additive. */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE habits ADD COLUMN motivation TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         // No fallbackToDestructiveMigration: add explicit Migrations when the schema changes.
         fun create(context: Context): EthosDatabase =
             Room.databaseBuilder(context, EthosDatabase::class.java, "ethos.db")
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                 .build()
     }
 }

@@ -11,6 +11,7 @@ enum class HabitType { BUILD, AVOID }
 enum class RecurrenceType { DAILY, WEEKDAYS, TIMES_PER_WEEK }
 enum class LogStatus { COMPLETED, FAILED }
 enum class ReminderMode { FIXED_TIMES, FIXED_INTERVAL, RANDOM_INTERVAL }
+enum class ExceptionKind { SKIPPED, MOVED }
 
 @Entity(tableName = "habits")
 data class Habit(
@@ -30,6 +31,8 @@ data class Habit(
     val law2: String = "",
     val law3: String = "",
     val law4: String = "",
+    /** Personal motivation, shown when the habit was missed once. */
+    val motivation: String = "",
 )
 
 @Entity(
@@ -56,6 +59,8 @@ data class HabitSchedule(
     val startDate: Long? = null,
     /** LocalDate.toEpochDay() */
     val endDate: Long? = null,
+    /** TIMES_PER_WEEK only: missed sessions of the previous week are added to this week (max +2). */
+    val catchUp: Boolean = false,
 )
 
 /** No row = NOT_RECORDED. */
@@ -112,6 +117,61 @@ data class Reminder(
     // Planning data
     val pausedUntil: Long? = null,
     val nextTriggerAt: Long? = null,
+    /** Interval modes only: how many times per day this reminder may appear (null = unlimited). */
+    val maxPerDay: Int? = null,
+    /** Day (ISO date) and number of notifications already shown that day. */
+    val firedDate: String? = null,
+    val firedCount: Int = 0,
+)
+
+/** One free-text note per habit and day; independent of whether a status was logged. */
+@Entity(
+    tableName = "habit_notes",
+    foreignKeys = [
+        ForeignKey(
+            entity = Habit::class,
+            parentColumns = ["id"],
+            childColumns = ["habitId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index(value = ["habitId", "localDate"], unique = true)],
+)
+data class HabitNote(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val habitId: Long,
+    /** ISO yyyy-MM-dd */
+    val localDate: String,
+    val text: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+/**
+ * One-off exception to a habit's schedule.
+ * SKIPPED: the origin day is dropped (e.g. sick). MOVED: the origin day is dropped and [targetDate] is added.
+ */
+@Entity(
+    tableName = "habit_exceptions",
+    foreignKeys = [
+        ForeignKey(
+            entity = Habit::class,
+            parentColumns = ["id"],
+            childColumns = ["habitId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index(value = ["habitId", "originDate"], unique = true)],
+)
+data class HabitException(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val habitId: Long,
+    /** ISO yyyy-MM-dd of the day that is dropped */
+    val originDate: String,
+    val kind: ExceptionKind,
+    /** ISO yyyy-MM-dd the habit moves to (MOVED only) */
+    val targetDate: String? = null,
+    val createdAt: Long,
 )
 
 data class HabitWithSchedule(

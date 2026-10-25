@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +25,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,9 +40,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.data.ExceptionKind
 import com.example.ethos.data.HabitType
 import com.example.ethos.data.LogStatus
 import com.example.ethos.domain.DayState
@@ -122,12 +126,38 @@ fun HabitDetailScreen(
                         Row(Modifier.fillMaxWidth()) {
                             Text("KW ${w.weekNumber}", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                             Text(
-                                "${w.done} von ${w.target}" + if (w.met) "  ✓" else "",
+                                "${w.done} von ${w.target}" + (if (w.extra > 0) " (+${w.extra})" else "") + if (w.met) "  ✓" else "",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = if (w.met) accent else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
+                }
+            }
+
+            if (s.notes.isNotEmpty()) {
+                EthosCard(spacing = 12.dp) {
+                    CardTitle("Notizen")
+                    s.notes.entries.sortedByDescending { it.key.toEpochDay() }.take(10).forEach { (date, text) ->
+                        Column(
+                            Modifier.fillMaxWidth().clickable { editing = date },
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Text(
+                                date.format(DAY_FMT),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = accent,
+                            )
+                            Text(text, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+
+            if (s.habit.motivation.isNotBlank()) {
+                EthosCard(spacing = 8.dp) {
+                    CardTitle("Motivation")
+                    Text(s.habit.motivation, style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
@@ -157,7 +187,13 @@ fun HabitDetailScreen(
                 date = date,
                 type = s.habit.type,
                 current = s.logs[date],
-                onPick = { vm.setStatus(date, it); editing = null },
+                initialNote = s.notes[date].orEmpty(),
+                canSkip = s.canSkip,
+                initialSkipped = s.exceptions.byOrigin[date]?.kind == ExceptionKind.SKIPPED,
+                moveTarget = s.exceptions.byOrigin[date]
+                    ?.takeIf { it.kind == ExceptionKind.MOVED }?.targetDate?.let { LocalDate.parse(it) },
+                onSave = { status, note, skipped -> vm.save(date, status, note, skipped); editing = null },
+                onUndoMove = { vm.undoMove(date); editing = null },
                 onDismiss = { editing = null },
             )
         }
@@ -167,7 +203,7 @@ fun HabitDetailScreen(
 @Composable
 private fun SummaryRow(s: DetailUiState, accent: Color) {
     val first = if (s.streak != null) "${s.streak}" to "Tage in Folge"
-    else "${s.weekDone ?: 0}/${s.schedule?.weeklyTarget ?: 1}" to "Diese Woche"
+    else "${s.weekDone ?: 0}/${s.weekTarget ?: s.schedule?.weeklyTarget ?: 1}" to "Diese Woche"
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         StatCell(first.first, first.second, accent, Modifier.weight(1f))
         StatCell(s.rate30?.let { "$it %" } ?: "–", "30 Tage", accent, Modifier.weight(1f))
@@ -231,6 +267,8 @@ private fun MonthGrid(s: DetailUiState, accent: Color, onPick: (LocalDate) -> Un
                         DayCell(
                             day = day,
                             state = s.stateOn(date),
+                            hasNote = s.notes.containsKey(date),
+                            crossedOut = s.isCrossedOut(date),
                             accent = accent,
                             isToday = date == s.today,
                             enabled = !date.isAfter(s.today),
@@ -250,6 +288,8 @@ private fun MonthGrid(s: DetailUiState, accent: Color, onPick: (LocalDate) -> Un
 private fun DayCell(
     day: Int,
     state: DayState?,
+    hasNote: Boolean,
+    crossedOut: Boolean,
     accent: Color,
     isToday: Boolean,
     enabled: Boolean,
@@ -280,40 +320,94 @@ private fun DayCell(
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        Text("$day", style = MaterialTheme.typography.bodyMedium, color = fg)
+        Text(
+            "$day",
+            style = MaterialTheme.typography.bodyMedium,
+            color = fg,
+            textDecoration = if (crossedOut) TextDecoration.LineThrough else null,
+        )
+        if (hasNote) {
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 3.dp)
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(fg),
+            )
+        }
     }
 }
+
+private data class DayOption(val status: LogStatus?, val skipped: Boolean, val label: String)
 
 @Composable
 private fun CorrectionDialog(
     date: LocalDate,
     type: HabitType,
     current: LogStatus?,
-    onPick: (LogStatus?) -> Unit,
+    initialNote: String,
+    canSkip: Boolean,
+    initialSkipped: Boolean,
+    moveTarget: LocalDate?,
+    onSave: (LogStatus?, String, Boolean) -> Unit,
+    onUndoMove: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val options: List<Pair<LogStatus?, String>> = if (type == HabitType.BUILD) {
-        listOf(LogStatus.COMPLETED to "Erledigt", LogStatus.FAILED to "Nicht gemacht", null to "Keine Angabe")
+    val options = if (type == HabitType.BUILD) {
+        buildList {
+            add(DayOption(LogStatus.COMPLETED, false, "Erledigt"))
+            add(DayOption(LogStatus.FAILED, false, "Nicht gemacht"))
+            add(DayOption(null, false, "Keine Angabe"))
+            if (canSkip) add(DayOption(null, true, "Ausgelassen (z. B. krank)"))
+        }
     } else {
-        listOf(null to "Vermieden", LogStatus.FAILED to "Doch gemacht")
+        listOf(DayOption(null, false, "Vermieden"), DayOption(LogStatus.FAILED, false, "Doch gemacht"))
     }
+    var selected by remember {
+        mutableStateOf(
+            if (initialSkipped) options.indexOfFirst { it.skipped }.coerceAtLeast(0)
+            else options.indexOfFirst { !it.skipped && it.status == current }.coerceAtLeast(0),
+        )
+    }
+    var note by remember { mutableStateOf(initialNote) }
+    val choice = options[selected]
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(date.format(DAY_FMT)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                options.forEach { (status, label) ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable { onPick(status) }.padding(vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = current == status, onClick = { onPick(status) })
-                        Text(label, style = MaterialTheme.typography.bodyLarge)
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                if (moveTarget != null) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "Verschoben auf ${moveTarget.format(DAY_FMT)}",
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                        TextButton(onClick = onUndoMove) { Text("Aufheben") }
                     }
                 }
+                options.forEachIndexed { index, option ->
+                    Row(
+                        Modifier.fillMaxWidth().clickable { selected = index }.padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = selected == index, onClick = { selected = index })
+                        Text(option.label, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    label = { Text(if (choice.status == LogStatus.FAILED) "Warum hat es nicht geklappt?" else "Notiz (optional)") },
+                    minLines = 2,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         },
-        confirmButton = {},
+        confirmButton = { TextButton(onClick = { onSave(choice.status, note, choice.skipped) }) { Text("Speichern") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
     )
 }

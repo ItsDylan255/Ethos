@@ -32,6 +32,7 @@ class HabitsViewModel(private val repo: EthosRepository) : ViewModel() {
 
     fun archive(habitId: Long) = viewModelScope.launch { repo.setArchived(habitId, true) }
     fun restore(habitId: Long) = viewModelScope.launch { repo.setArchived(habitId, false) }
+    fun delete(habitId: Long) = viewModelScope.launch { repo.deleteHabit(habitId) }
 
     fun move(habitId: Long, delta: Int) {
         val list = uiState.value.active

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -48,6 +49,7 @@ fun HabitsScreen(
     vm: HabitsViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    var deleteTarget by remember { mutableStateOf<HabitWithSchedule?>(null) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -79,6 +81,7 @@ fun HabitsScreen(
                         DropdownMenuItem(text = { Text("Nach oben") }, onClick = { close(); vm.move(hs.habit.id, -1) })
                         DropdownMenuItem(text = { Text("Nach unten") }, onClick = { close(); vm.move(hs.habit.id, 1) })
                         DropdownMenuItem(text = { Text("Archivieren") }, onClick = { close(); vm.archive(hs.habit.id) })
+                        DropdownMenuItem(text = { Text("Löschen") }, onClick = { close(); deleteTarget = hs })
                     },
                 )
             }
@@ -97,12 +100,27 @@ fun HabitsScreen(
                             onClick = { onEditHabit(hs.habit.id) },
                             menu = { close ->
                                 DropdownMenuItem(text = { Text("Reaktivieren") }, onClick = { close(); vm.restore(hs.habit.id) })
+                                DropdownMenuItem(text = { Text("Löschen") }, onClick = { close(); deleteTarget = hs })
                             },
                         )
                     }
                 }
             }
         }
+    }
+
+    deleteTarget?.let { target ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text("„${target.habit.title}“ löschen?") },
+            text = { Text("Das Habit mit Verlauf, Notizen und Erinnerungen wird endgültig gelöscht. Zum Aufheben gibt es nur Archivieren.") },
+            confirmButton = {
+                TextButton(onClick = { vm.delete(target.habit.id); deleteTarget = null }) {
+                    Text("Löschen", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Abbrechen") } },
+        )
     }
 }
 

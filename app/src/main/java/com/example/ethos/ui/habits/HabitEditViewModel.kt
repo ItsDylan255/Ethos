@@ -23,6 +23,7 @@ private fun emptyLaws() = List(4) { "" }
 data class HabitForm(
     val title: String = "",
     val description: String = "",
+    val motivation: String = "",
     val type: HabitType = HabitType.BUILD,
     /** Kept per type so switching the type does not discard what was typed. */
     val buildLaws: List<String> = emptyLaws(),
@@ -30,6 +31,7 @@ data class HabitForm(
     val recurrence: RecurrenceType = RecurrenceType.DAILY,
     val weekdays: Set<Int> = ALL_DAYS,
     val weeklyTarget: Int = 3,
+    val catchUp: Boolean = false,
     val startDate: LocalDate? = null,
     val endDate: LocalDate? = null,
     val isArchived: Boolean = false,
@@ -96,6 +98,7 @@ class HabitEditViewModel(
             val habit = (original ?: Habit(title = "")).copy(
                 title = f.title.trim(),
                 description = f.description.trim().ifEmpty { null },
+                motivation = f.motivation.trim(),
                 type = f.type,
                 law1 = laws[0],
                 law2 = laws[1],
@@ -107,10 +110,18 @@ class HabitEditViewModel(
                 recurrenceType = f.recurrence,
                 weekdays = if (f.recurrence == RecurrenceType.WEEKDAYS) daysToCsv(f.weekdays) else "",
                 weeklyTarget = if (f.recurrence == RecurrenceType.TIMES_PER_WEEK) f.weeklyTarget else null,
+                catchUp = f.recurrence == RecurrenceType.TIMES_PER_WEEK && f.catchUp,
                 startDate = f.startDate?.toEpochDay(),
                 endDate = f.endDate?.toEpochDay(),
             )
             repo.saveHabit(habit, schedule)
+            onDone()
+        }
+    }
+
+    fun delete(onDone: () -> Unit) {
+        viewModelScope.launch {
+            repo.deleteHabit(habitId)
             onDone()
         }
     }
@@ -132,12 +143,14 @@ private fun HabitWithSchedule.toForm(): HabitForm {
     return HabitForm(
         title = habit.title,
         description = habit.description.orEmpty(),
+        motivation = habit.motivation,
         type = habit.type,
         buildLaws = if (habit.type == HabitType.BUILD) laws else emptyLaws(),
         avoidLaws = if (habit.type == HabitType.AVOID) laws else emptyLaws(),
         recurrence = recurrence,
         weekdays = if (recurrence == RecurrenceType.WEEKDAYS) parseDays(schedule?.weekdays) else ALL_DAYS,
         weeklyTarget = schedule?.weeklyTarget ?: 3,
+        catchUp = schedule?.catchUp ?: false,
         startDate = schedule?.startDate?.let { LocalDate.ofEpochDay(it) },
         endDate = schedule?.endDate?.let { LocalDate.ofEpochDay(it) },
         isArchived = habit.isArchived,

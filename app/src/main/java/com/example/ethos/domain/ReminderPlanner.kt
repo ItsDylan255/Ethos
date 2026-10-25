@@ -28,6 +28,10 @@ object ReminderPlanner {
         for (offset in 0L..7L) {
             val date = firstDay.plusDays(offset)
             if (date.dayOfWeek.value !in allowed) continue
+            // Daily limit (interval modes): once reached, continue on the next day.
+            val limit = if (reminder.mode == ReminderMode.FIXED_TIMES) null else reminder.maxPerDay
+            val firedThatDay = if (reminder.firedDate == date.toString()) reminder.firedCount else 0
+            if (limit != null && firedThatDay >= limit) continue
             val windowStart = at(date, start, zone)
             val windowEnd = if (end.isAfter(start)) at(date, end, zone) else at(date.plusDays(1), end, zone)
 

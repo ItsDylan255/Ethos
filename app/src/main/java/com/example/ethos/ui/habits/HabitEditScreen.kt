@@ -19,12 +19,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -47,19 +53,21 @@ import com.example.ethos.ui.components.EthosTopBar
 import com.example.ethos.ui.components.HairlineDivider
 import com.example.ethos.ui.components.IntStepper
 import com.example.ethos.ui.components.OptionalDateField
+import com.example.ethos.ui.components.TypeSymbol
 import com.example.ethos.ui.components.Pill
-import com.example.ethos.ui.habitSymbol
 import com.example.ethos.ui.theme.typeColor
 import com.example.ethos.ui.theme.typeContainerColor
 
 @Composable
 fun HabitEditScreen(
     onBack: () -> Unit,
+    onDeleted: () -> Unit,
     vm: HabitEditViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val form = vm.form
     val isBuild = form.type == HabitType.BUILD
     val accent = typeColor(form.type)
+    var confirmDelete by remember { mutableStateOf(false) }
     val lawLabels = if (isBuild) BUILD_LAW_LABELS else AVOID_LAW_LABELS
     val lawHints = if (isBuild) BUILD_LAW_HINTS else AVOID_LAW_HINTS
 
@@ -142,6 +150,19 @@ fun HabitEditScreen(
                 }
             }
 
+            // Personal motivation (shown when the habit was missed once)
+            EthosCard(spacing = 12.dp) {
+                CardTitle("Motivation")
+                OutlinedTextField(
+                    value = form.motivation,
+                    onValueChange = { v -> vm.update { it.copy(motivation = v) } },
+                    label = { Text("Deine Motivation (optional)") },
+                    placeholder = { Text("Warum machst du das? Wofür lohnt es sich?") },
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
             // Schedule
             EthosCard(spacing = 12.dp) {
                 CardTitle("Zeitplan")
@@ -171,6 +192,20 @@ fun HabitEditScreen(
                         max = 7,
                         suffix = "×",
                     )
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Verpasstes nachholen", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                "Fehlende Einheiten der Vorwoche kommen dazu (höchstens +2)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = form.catchUp,
+                            onCheckedChange = { v -> vm.update { it.copy(catchUp = v) } },
+                        )
+                    }
                 }
                 HairlineDivider()
                 OptionalDateField("Startdatum", form.startDate) { v -> vm.update { it.copy(startDate = v) } }
@@ -178,11 +213,30 @@ fun HabitEditScreen(
             }
 
             if (vm.isEditing) {
-                TextButton(onClick = { vm.toggleArchive(onBack) }) {
-                    Text(if (form.isArchived) "Reaktivieren" else "Archivieren")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { vm.toggleArchive(onBack) }) {
+                        Text(if (form.isArchived) "Reaktivieren" else "Archivieren")
+                    }
+                    TextButton(onClick = { confirmDelete = true }) {
+                        Text("Löschen", color = MaterialTheme.colorScheme.error)
+                    }
                 }
             }
         }
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("„${form.title}“ löschen?") },
+            text = { Text("Das Habit mit Verlauf, Notizen und Erinnerungen wird endgültig gelöscht. Zum Aufheben gibt es nur Archivieren.") },
+            confirmButton = {
+                TextButton(onClick = { confirmDelete = false; vm.delete(onDeleted) }) {
+                    Text("Löschen", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Abbrechen") } },
+        )
     }
 }
 
@@ -200,7 +254,7 @@ private fun TypeTile(type: HabitType, label: String, selected: Boolean, onClick:
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(habitSymbol(type), style = MaterialTheme.typography.headlineSmall)
+        TypeSymbol(type, iconSize = 32.dp)
         Text(label, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
     }
 }

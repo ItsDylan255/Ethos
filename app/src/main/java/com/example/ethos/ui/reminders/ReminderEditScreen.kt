@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -27,12 +28,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -179,6 +182,7 @@ fun ReminderEditScreen(
                         step = 15, min = 5, max = 720, suffix = " Min",
                     )
                     WindowFields(form.windowStart, form.windowEnd) { s, e -> vm.update { it.copy(windowStart = s, windowEnd = e) } }
+                    DailyLimitFields(form.maxPerDay) { v -> vm.update { it.copy(maxPerDay = v) } }
                 }
 
                 ReminderMode.RANDOM_INTERVAL -> Column {
@@ -195,6 +199,7 @@ fun ReminderEditScreen(
                         step = 15, min = 5, max = 1440, suffix = " Min",
                     )
                     WindowFields(form.windowStart, form.windowEnd) { s, e -> vm.update { it.copy(windowStart = s, windowEnd = e) } }
+                    DailyLimitFields(form.maxPerDay) { v -> vm.update { it.copy(maxPerDay = v) } }
                 }
             }
 
@@ -237,5 +242,26 @@ private fun WindowFields(start: LocalTime, end: LocalTime, onChange: (LocalTime,
     Column {
         TimeField("Von", start) { onChange(it, end) }
         TimeField("Bis", end) { onChange(start, it) }
+    }
+}
+
+/** Optional cap on how often an interval reminder may appear per day. */
+@Composable
+private fun DailyLimitFields(maxPerDay: Int?, onChange: (Int?) -> Unit) {
+    Column {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Maximal pro Tag begrenzen", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = maxPerDay != null, onCheckedChange = { onChange(if (it) 3 else null) })
+        }
+        if (maxPerDay != null) {
+            IntStepper(
+                label = "Höchstens",
+                value = maxPerDay,
+                onChange = { onChange(it) },
+                min = 1,
+                max = 48,
+                suffix = "×",
+            )
+        }
     }
 }

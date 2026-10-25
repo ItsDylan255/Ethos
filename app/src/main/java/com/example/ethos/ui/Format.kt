@@ -15,10 +15,8 @@ val WEEKDAY_SHORT = listOf("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
 val DATE_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("d. MMM yyyy", Locale.GERMAN)
 val TIME_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-/** Symbol is derived automatically from the habit type; there is no manual selection. */
-fun habitSymbol(type: HabitType): String = if (type == HabitType.BUILD) "🌱" else "🚫"
-
-fun Habit.displayTitle(): String = "${habitSymbol(type)} $title"
+/** The type symbol is drawn by TypeSymbol/TypeBadge; titles stay plain text. */
+fun Habit.displayTitle(): String = title
 
 val BUILD_LAW_LABELS = listOf("Offensichtlich machen", "Attraktiv machen", "Einfach machen", "Befriedigend machen")
 val AVOID_LAW_LABELS = listOf("Unsichtbar machen", "Unattraktiv machen", "Schwierig machen", "Unbefriedigend machen")
@@ -47,12 +45,13 @@ fun scheduleSummary(schedule: HabitSchedule?): String =
 
 fun reminderSummary(r: Reminder): String {
     val window = "${r.startTime}–${r.endTime}"
+    val limit = r.maxPerDay?.let { " · max. ${it}×/Tag" }.orEmpty()
     val mode = when (r.mode) {
         ReminderMode.FIXED_TIMES ->
             ReminderPlanner.fixedTimes(r).joinToString(", ") { it.format(TIME_FMT) }.ifEmpty { "Keine Zeiten" }
-        ReminderMode.FIXED_INTERVAL -> "Alle ${r.minIntervalMinutes ?: 60} Min · $window"
+        ReminderMode.FIXED_INTERVAL -> "Alle ${r.minIntervalMinutes ?: 60} Min · $window$limit"
         ReminderMode.RANDOM_INTERVAL ->
-            "Zufällig ${r.minIntervalMinutes ?: 30}–${r.maxIntervalMinutes ?: r.minIntervalMinutes ?: 30} Min · $window"
+            "Zufällig ${r.minIntervalMinutes ?: 30}–${r.maxIntervalMinutes ?: r.minIntervalMinutes ?: 30} Min · $window$limit"
     }
     val days = parseDays(r.weekdays)
     val dayText = if (days.size == 7 || days.isEmpty()) "täglich" else days.sorted().joinToString(", ") { WEEKDAY_SHORT[it - 1] }

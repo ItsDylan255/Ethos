@@ -15,6 +15,7 @@ import com.example.ethos.R
 import com.example.ethos.data.Reminder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 object ReminderNotifier {
@@ -90,7 +91,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     ReminderNotifier.show(app, reminder, habit?.title)
                 }
                 if (action == ReminderScheduler.ACTION_FIRE) {
-                    container.repository.rescheduleReminder(reminder)
+                    container.repository.registerFire(reminder)
                 }
             }
         }
@@ -105,6 +106,7 @@ class BootReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 app.container.repository.rescheduleAll()
+                app.container.dailyScheduler.scheduleAll(app.container.settings.settings.first())
             } finally {
                 pending.finish()
             }
