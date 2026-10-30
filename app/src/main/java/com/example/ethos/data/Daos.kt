@@ -67,6 +67,16 @@ interface LogDao {
     @Query("DELETE FROM habit_logs WHERE habitId = :habitId AND localDate = :date")
     suspend fun delete(habitId: Long, date: String)
 
+    /** ISO dates compare correctly as text. */
+    @Query("SELECT COUNT(*) FROM habit_logs WHERE habitId = :habitId AND localDate < :before")
+    suspend fun countBefore(habitId: Long, before: String): Int
+
+    @Query("DELETE FROM habit_logs WHERE habitId = :habitId AND localDate < :before")
+    suspend fun deleteBefore(habitId: Long, before: String)
+
+    @Query("DELETE FROM habit_logs WHERE habitId = :habitId")
+    suspend fun deleteForHabit(habitId: Long)
+
     // Backup / restore
     @Query("SELECT * FROM habit_logs") suspend fun getAll(): List<HabitLog>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(list: List<HabitLog>)
@@ -85,6 +95,15 @@ interface NoteDao {
 
     @Query("DELETE FROM habit_notes WHERE habitId = :habitId AND localDate = :date")
     suspend fun delete(habitId: Long, date: String)
+
+    @Query("SELECT COUNT(*) FROM habit_notes WHERE habitId = :habitId AND localDate < :before")
+    suspend fun countBefore(habitId: Long, before: String): Int
+
+    @Query("DELETE FROM habit_notes WHERE habitId = :habitId AND localDate < :before")
+    suspend fun deleteBefore(habitId: Long, before: String)
+
+    @Query("DELETE FROM habit_notes WHERE habitId = :habitId")
+    suspend fun deleteForHabit(habitId: Long)
 
     // Backup / restore
     @Query("SELECT * FROM habit_notes") suspend fun getAll(): List<HabitNote>
@@ -132,6 +151,16 @@ interface ExceptionDao {
     /** Removes the exception that drops [date] or the one that moves a habit onto [date]. */
     @Query("DELETE FROM habit_exceptions WHERE habitId = :habitId AND (originDate = :date OR targetDate = :date)")
     suspend fun deleteAround(habitId: Long, date: String)
+
+    /** Skips and moves that start before [before], or move a day to before it. */
+    @Query("SELECT COUNT(*) FROM habit_exceptions WHERE habitId = :habitId AND (originDate < :before OR targetDate < :before)")
+    suspend fun countBefore(habitId: Long, before: String): Int
+
+    @Query("DELETE FROM habit_exceptions WHERE habitId = :habitId AND (originDate < :before OR targetDate < :before)")
+    suspend fun deleteBefore(habitId: Long, before: String)
+
+    @Query("DELETE FROM habit_exceptions WHERE habitId = :habitId")
+    suspend fun deleteForHabit(habitId: Long)
 
     // Backup / restore
     @Query("SELECT * FROM habit_exceptions") suspend fun getAll(): List<HabitException>

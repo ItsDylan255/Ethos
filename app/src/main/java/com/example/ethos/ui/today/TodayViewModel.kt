@@ -121,8 +121,8 @@ class TodayViewModel(
         dismissed.update { it + state.hints.map { h -> "${h.id}:${state.date}" } }
     }
 
-    fun skipToday(habitId: Long) {
-        viewModelScope.launch { repo.skipDay(habitId, LocalDate.now()) }
+    fun skipToday(habitId: Long, reason: String) {
+        viewModelScope.launch { repo.skipDayWithReason(habitId, LocalDate.now(), reason) }
     }
 
     fun moveToday(habitId: Long, target: LocalDate) {

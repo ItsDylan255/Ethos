@@ -52,10 +52,15 @@ class HabitEditViewModel(
 ) : ViewModel() {
     private val habitId: Long = savedStateHandle["id"] ?: -1L
     private var original: Habit? = null
+    private var originalStart: LocalDate? = null
 
     val isEditing: Boolean = habitId > 0
 
     var form by mutableStateOf(HabitForm())
+        private set
+
+    /** Entries before the new start date that saving would delete; non-null shows the warning. */
+    var pendingPurge by mutableStateOf<Int?>(null)
         private set
 
     init {
@@ -64,6 +69,7 @@ class HabitEditViewModel(
                 repo.getHabit(habitId)?.let { hs ->
                     original = hs.habit
                     form = hs.toForm()
+                    originalStart = form.startDate
                 }
             }
         }
@@ -91,32 +97,61 @@ class HabitEditViewModel(
         else it.copy(recurrence = RecurrenceType.TIMES_PER_WEEK)
     }
 
+    /** Asks first if a changed start date would delete earlier entries. */
     fun save(onDone: () -> Unit) {
         viewModelScope.launch {
-            val f = form
-            val laws = f.laws.map { it.trim() }
-            val habit = (original ?: Habit(title = "")).copy(
-                title = f.title.trim(),
-                description = f.description.trim().ifEmpty { null },
-                motivation = f.motivation.trim(),
-                type = f.type,
-                law1 = laws[0],
-                law2 = laws[1],
-                law3 = laws[2],
-                law4 = laws[3],
-            )
-            val schedule = HabitSchedule(
-                habitId = habit.id,
-                recurrenceType = f.recurrence,
-                weekdays = if (f.recurrence == RecurrenceType.WEEKDAYS) daysToCsv(f.weekdays) else "",
-                weeklyTarget = if (f.recurrence == RecurrenceType.TIMES_PER_WEEK) f.weeklyTarget else null,
-                catchUp = f.recurrence == RecurrenceType.TIMES_PER_WEEK && f.catchUp,
-                startDate = f.startDate?.toEpochDay(),
-                endDate = f.endDate?.toEpochDay(),
-            )
-            repo.saveHabit(habit, schedule)
-            onDone()
+            val start = form.startDate
+            if (isEditing && start != null && start != originalStart) {
+                val count = repo.countEntriesBefore(habitId, start)
+                if (count > 0) {
+                    pendingPurge = count
+                    return@launch
+                }
+            }
+            persist(purgeBefore = null, onDone)
         }
+    }
+
+    fun confirmPurge(onDone: () -> Unit) {
+        pendingPurge = null
+        viewModelScope.launch { persist(purgeBefore = form.startDate, onDone) }
+    }
+
+    fun cancelPurge() { pendingPurge = null }
+
+    /** Deletes the history; name, description, motivation and strategies stay. */
+    fun resetStats() {
+        viewModelScope.launch {
+            val start = repo.resetStats(habitId)
+            originalStart = start
+            form = form.copy(startDate = start)
+        }
+    }
+
+    private suspend fun persist(purgeBefore: LocalDate?, onDone: () -> Unit) {
+        val f = form
+        val laws = f.laws.map { it.trim() }
+        val habit = (original ?: Habit(title = "")).copy(
+            title = f.title.trim(),
+            description = f.description.trim().ifEmpty { null },
+            motivation = f.motivation.trim(),
+            type = f.type,
+            law1 = laws[0],
+            law2 = laws[1],
+            law3 = laws[2],
+            law4 = laws[3],
+        )
+        val schedule = HabitSchedule(
+            habitId = habit.id,
+            recurrenceType = f.recurrence,
+            weekdays = if (f.recurrence == RecurrenceType.WEEKDAYS) daysToCsv(f.weekdays) else "",
+            weeklyTarget = if (f.recurrence == RecurrenceType.TIMES_PER_WEEK) f.weeklyTarget else null,
+            catchUp = f.recurrence == RecurrenceType.TIMES_PER_WEEK && f.catchUp,
+            startDate = f.startDate?.toEpochDay(),
+            endDate = f.endDate?.toEpochDay(),
+        )
+        repo.saveHabit(habit, schedule, purgeBefore)
+        onDone()
     }
 
     fun delete(onDone: () -> Unit) {

@@ -26,7 +26,8 @@ class EthosRepository(
     fun observeHabit(id: Long): Flow<HabitWithSchedule?> = habits.observeById(id)
     suspend fun getHabit(id: Long): HabitWithSchedule? = habits.getById(id)
 
-    suspend fun saveHabit(habit: Habit, schedule: HabitSchedule): Long = db.withTransaction {
+    /** [purgeBefore] deletes logs, notes and skips/moves of days before that date (new start date). */
+    suspend fun saveHabit(habit: Habit, schedule: HabitSchedule, purgeBefore: LocalDate? = null): Long = db.withTransaction {
         val id = if (habit.id == 0L) {
             habits.insert(habit.copy(sortOrder = habits.nextSortOrder()))
         } else {
@@ -34,7 +35,34 @@ class EthosRepository(
             habit.id
         }
         habits.upsertSchedule(schedule.copy(id = 0, habitId = id))
+        if (purgeBefore != null) {
+            val key = purgeBefore.toString()
+            logs.deleteBefore(id, key)
+            notes.deleteBefore(id, key)
+            exceptions.deleteBefore(id, key)
+        }
         id
+    }
+
+    /** Number of logs, notes and skips/moves that lie before [date]. */
+    suspend fun countEntriesBefore(habitId: Long, date: LocalDate): Int {
+        val key = date.toString()
+        return logs.countBefore(habitId, key) + notes.countBefore(habitId, key) + exceptions.countBefore(habitId, key)
+    }
+
+    /**
+     * Clears the history (logs, notes, skips/moves) but keeps texts and schedule. The habit starts again
+     * today; otherwise past days without entry would count as "avoided" again for AVOID habits.
+     * Returns the new start date.
+     */
+    suspend fun resetStats(habitId: Long, today: LocalDate = LocalDate.now()): LocalDate = db.withTransaction {
+        logs.deleteForHabit(habitId)
+        notes.deleteForHabit(habitId)
+        exceptions.deleteForHabit(habitId)
+        val schedule = habits.getById(habitId)?.schedule ?: HabitSchedule(habitId = habitId)
+        val start = schedule.startDate?.let { LocalDate.ofEpochDay(it) }?.takeIf { it.isAfter(today) } ?: today
+        habits.upsertSchedule(schedule.copy(id = 0, startDate = start.toEpochDay()))
+        start
     }
 
     suspend fun setArchived(id: Long, archived: Boolean) = habits.setArchived(id, archived)
@@ -188,6 +216,12 @@ class EthosRepository(
 
     // ---- Schedule exceptions ----
     fun observeAllExceptions(): Flow<List<HabitException>> = exceptions.observeAll()
+
+    /** Skips [date] and stores the reason as that day's note. */
+    suspend fun skipDayWithReason(habitId: Long, date: LocalDate, reason: String) = db.withTransaction {
+        skipDay(habitId, date)
+        setNote(habitId, date, reason)
+    }
 
     /** Drops [date] from the schedule (e.g. sick). If the day was moved here, the move is turned into a skip. */
     suspend fun skipDay(habitId: Long, date: LocalDate) = db.withTransaction {

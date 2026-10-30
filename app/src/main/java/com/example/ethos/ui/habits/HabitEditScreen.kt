@@ -46,6 +46,7 @@ import com.example.ethos.ui.AVOID_LAW_LABELS
 import com.example.ethos.ui.AppViewModelProvider
 import com.example.ethos.ui.BUILD_LAW_HINTS
 import com.example.ethos.ui.BUILD_LAW_LABELS
+import com.example.ethos.ui.DATE_FMT
 import com.example.ethos.ui.WEEKDAY_SHORT
 import com.example.ethos.ui.components.CardTitle
 import com.example.ethos.ui.components.EthosCard
@@ -68,6 +69,7 @@ fun HabitEditScreen(
     val isBuild = form.type == HabitType.BUILD
     val accent = typeColor(form.type)
     var confirmDelete by remember { mutableStateOf(false) }
+    var confirmReset by remember { mutableStateOf(false) }
     val lawLabels = if (isBuild) BUILD_LAW_LABELS else AVOID_LAW_LABELS
     val lawHints = if (isBuild) BUILD_LAW_HINTS else AVOID_LAW_HINTS
 
@@ -213,6 +215,8 @@ fun HabitEditScreen(
             }
 
             if (vm.isEditing) {
+                // Own row: three buttons do not fit side by side on narrow screens.
+                TextButton(onClick = { confirmReset = true }) { Text("Statistik zurücksetzen") }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(onClick = { vm.toggleArchive(onBack) }) {
                         Text(if (form.isArchived) "Reaktivieren" else "Archivieren")
@@ -223,6 +227,45 @@ fun HabitEditScreen(
                 }
             }
         }
+    }
+
+    if (confirmReset) {
+        AlertDialog(
+            onDismissRequest = { confirmReset = false },
+            title = { Text("Statistik zurücksetzen?") },
+            text = {
+                Text(
+                    "Verlauf, Notizen und ausgelassene Tage werden gelöscht und das Habit startet heute neu. " +
+                        "Name, Beschreibung, Motivation und deine Strategien bleiben erhalten.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { confirmReset = false; vm.resetStats() }) {
+                    Text("Zurücksetzen", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Abbrechen") } },
+        )
+    }
+
+    vm.pendingPurge?.let { count ->
+        val start = form.startDate?.format(DATE_FMT).orEmpty()
+        AlertDialog(
+            onDismissRequest = vm::cancelPurge,
+            title = { Text("Frühere Einträge löschen?") },
+            text = {
+                Text(
+                    "Vor dem neuen Startdatum ($start) gibt es $count Einträge (Status, Notizen, ausgelassene Tage). " +
+                        "Sie werden beim Speichern endgültig gelöscht.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { vm.confirmPurge(onBack) }) {
+                    Text("Löschen und speichern", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = vm::cancelPurge) { Text("Abbrechen") } },
+        )
     }
 
     if (confirmDelete) {

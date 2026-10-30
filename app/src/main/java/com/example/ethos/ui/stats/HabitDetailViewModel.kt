@@ -7,7 +7,6 @@ import com.example.ethos.data.EthosRepository
 import com.example.ethos.data.ExceptionKind
 import com.example.ethos.data.Habit
 import com.example.ethos.data.HabitSchedule
-import com.example.ethos.data.HabitType
 import com.example.ethos.data.LogStatus
 import com.example.ethos.data.RecurrenceType
 import com.example.ethos.domain.DayState
@@ -40,9 +39,9 @@ data class DetailUiState(
     val notes: Map<LocalDate, String>,
     val exceptions: ScheduleExceptions,
 ) {
-    /** Only habits you build on fixed days can have days skipped. */
+    /** Days can be skipped unless the habit only has a weekly target. */
     val canSkip: Boolean
-        get() = habit.type == HabitType.BUILD && schedule?.recurrenceType != RecurrenceType.TIMES_PER_WEEK
+        get() = schedule?.recurrenceType != RecurrenceType.TIMES_PER_WEEK
 
     fun stateOn(date: LocalDate): DayState? =
         HabitLogic.cellState(habit, schedule, logs, date, today, start, exceptions)

@@ -12,7 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
-/** Short free-text note. Saving a blank text removes the note. */
+/** Short free-text note. Saving a blank text removes the note, unless [required] blocks saving it. */
 @Composable
 fun NoteDialog(
     title: String,
@@ -21,6 +21,8 @@ fun NoteDialog(
     onSave: (String) -> Unit,
     onDismiss: () -> Unit,
     dismissLabel: String = "Abbrechen",
+    confirmLabel: String = "Speichern",
+    required: Boolean = false,
 ) {
     var text by remember { mutableStateOf(initial) }
     AlertDialog(
@@ -35,7 +37,9 @@ fun NoteDialog(
                 modifier = Modifier.fillMaxWidth(),
             )
         },
-        confirmButton = { TextButton(onClick = { onSave(text) }) { Text("Speichern") } },
+        confirmButton = {
+            TextButton(enabled = !required || text.isNotBlank(), onClick = { onSave(text) }) { Text(confirmLabel) }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text(dismissLabel) } },
     )
 }

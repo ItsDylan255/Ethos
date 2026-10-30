@@ -52,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,6 +73,7 @@ import com.example.ethos.ui.components.Pill
 import com.example.ethos.ui.components.ProgressBar
 import com.example.ethos.ui.components.SectionLabel
 import com.example.ethos.ui.displayTitle
+import com.example.ethos.ui.playCompletionSound
 import com.example.ethos.ui.theme.typeColor
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -87,6 +89,8 @@ private data class NoteTarget(
     val label: String,
     val initial: String,
     val afterFailure: Boolean,
+    /** Skipping today: the reason is required and saving skips the day. */
+    val skip: Boolean = false,
 )
 
 /** Everything a card can do; keeps the card signature short. */
@@ -114,6 +118,7 @@ fun TodayScreen(
     var showMotivation by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     fun target(item: TodayItem, afterFailure: Boolean) = NoteTarget(
         habitId = item.habit.id,
@@ -136,13 +141,22 @@ fun TodayScreen(
     }
 
     fun actionsFor(item: TodayItem) = CardActions(
-        onSet = { vm.setStatus(item.habit.id, it) },
+        onSet = {
+            if (it == LogStatus.COMPLETED) playCompletionSound(context)
+            vm.setStatus(item.habit.id, it)
+        },
         onFailed = { noteTarget = target(item, afterFailure = true) },
         onNote = { noteTarget = target(item, afterFailure = false) },
         onOpen = { onOpenHabit(item.habit.id) },
         onSkip = {
-            vm.skipToday(item.habit.id)
-            announce("Heute ausgelassen", item.habit.id)
+            noteTarget = NoteTarget(
+                habitId = item.habit.id,
+                habitTitle = item.habit.title,
+                label = "Warum lässt du heute aus?",
+                initial = item.note.orEmpty(),
+                afterFailure = false,
+                skip = true,
+            )
         },
         onMoveTomorrow = {
             vm.moveToday(item.habit.id, state.date.plusDays(1))
@@ -211,7 +225,17 @@ fun TodayScreen(
             label = t.label,
             initial = t.initial,
             dismissLabel = if (t.afterFailure) "Überspringen" else "Abbrechen",
-            onSave = { vm.saveNote(t.habitId, it); noteTarget = null },
+            confirmLabel = if (t.skip) "Auslassen" else "Speichern",
+            required = t.skip,
+            onSave = { text ->
+                if (t.skip) {
+                    vm.skipToday(t.habitId, text)
+                    announce("Heute ausgelassen", t.habitId)
+                } else {
+                    vm.saveNote(t.habitId, text)
+                }
+                noteTarget = null
+            },
             onDismiss = { noteTarget = null },
         )
     }
@@ -382,10 +406,10 @@ private fun TodayCard(item: TodayItem, actions: CardActions) {
                     )
                 }
             }
-            // Three-dot menu for both types; skip/move only exist for habits you build.
+            // Three-dot menu for both types; both can skip a day, moving only exists for habits you build.
             var menu by remember { mutableStateOf(false) }
             val weekdays = isBuild && item.recurrence == RecurrenceType.WEEKDAYS
-            val canSkip = isBuild && item.recurrence != RecurrenceType.TIMES_PER_WEEK
+            val canSkip = item.recurrence != RecurrenceType.TIMES_PER_WEEK
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Mehr") }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -395,7 +419,7 @@ private fun TodayCard(item: TodayItem, actions: CardActions) {
                             text = { Text("Nicht gemacht") },
                             onClick = { actions.onSet(LogStatus.FAILED); menu = false; actions.onFailed() },
                         )
-                        DropdownMenuItem(text = { Text("Zurücksetzen") }, onClick = { actions.onSet(null); menu = false })
+                        DropdownMenuItem(text = { Text("Heute zurücksetzen") }, onClick = { actions.onSet(null); menu = false })
                         DropdownMenuItem(
                             text = { Text(if (item.note == null) "Notiz hinzufügen" else "Notiz bearbeiten") },
                             onClick = { menu = false; actions.onNote() },

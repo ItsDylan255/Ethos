@@ -66,6 +66,9 @@ fun SettingsScreen(
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json"),
     ) { uri -> if (uri != null) vm.export(uri) }
+    val csvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv"),
+    ) { uri -> if (uri != null) vm.exportCsv(uri) }
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { uri -> if (uri != null) pendingImport = uri }
@@ -160,6 +163,17 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1f),
                     ) { Text("Importieren") }
                 }
+                HairlineDivider()
+                Text(
+                    "Auswertung: eine Tabelle (CSV) mit einer Zeile pro Habit und Tag – Status, Erfolg (1/0) und Notiz. " +
+                        "Öffnet sich direkt in Excel oder LibreOffice.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedButton(
+                    onClick = { csvLauncher.launch("ethos-auswertung-${LocalDate.now()}.csv") },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Als Tabelle exportieren") }
                 message?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.ethos.EthosApp
 import com.example.ethos.data.AppSettings
 import com.example.ethos.data.BackupJson
+import com.example.ethos.data.CsvExport
 import com.example.ethos.data.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,6 +53,22 @@ class SettingsViewModel(private val app: EthosApp) : ViewModel() {
                     stream.use { it.write(json.toByteArray(Charsets.UTF_8)) }
                 }
                 "Sicherung gespeichert."
+            } catch (e: Exception) {
+                "Export fehlgeschlagen: ${e.message}"
+            }
+        }
+    }
+
+    /** Table of all days for analysis (Excel, LibreOffice, pandas …); not importable. */
+    fun exportCsv(uri: Uri) {
+        viewModelScope.launch {
+            _message.value = try {
+                withContext(Dispatchers.IO) {
+                    val csv = CsvExport.encode(container.repository.snapshot())
+                    val stream = app.contentResolver.openOutputStream(uri, "wt") ?: error("Datei nicht beschreibbar")
+                    stream.use { it.write(csv.toByteArray(Charsets.UTF_8)) }
+                }
+                "Tabelle gespeichert."
             } catch (e: Exception) {
                 "Export fehlgeschlagen: ${e.message}"
             }

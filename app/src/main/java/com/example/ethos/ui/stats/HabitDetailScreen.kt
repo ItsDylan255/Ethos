@@ -362,7 +362,11 @@ private fun CorrectionDialog(
             if (canSkip) add(DayOption(null, true, "Ausgelassen (z. B. krank)"))
         }
     } else {
-        listOf(DayOption(null, false, "Vermieden"), DayOption(LogStatus.FAILED, false, "Doch gemacht"))
+        buildList {
+            add(DayOption(null, false, "Vermieden"))
+            add(DayOption(LogStatus.FAILED, false, "Doch gemacht"))
+            if (canSkip) add(DayOption(null, true, "Ausgelassen (z. B. krank)"))
+        }
     }
     var selected by remember {
         mutableStateOf(
@@ -401,13 +405,27 @@ private fun CorrectionDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text(if (choice.status == LogStatus.FAILED) "Warum hat es nicht geklappt?" else "Notiz (optional)") },
+                    label = {
+                        Text(
+                            when {
+                                choice.skipped -> "Warum lässt du aus? *"
+                                choice.status == LogStatus.FAILED -> "Warum hat es nicht geklappt?"
+                                else -> "Notiz (optional)"
+                            },
+                        )
+                    },
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
-        confirmButton = { TextButton(onClick = { onSave(choice.status, note, choice.skipped) }) { Text("Speichern") } },
+        confirmButton = {
+            // Skipping always needs a reason.
+            TextButton(
+                enabled = !choice.skipped || note.isNotBlank(),
+                onClick = { onSave(choice.status, note, choice.skipped) },
+            ) { Text("Speichern") }
+        },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
     )
 }
