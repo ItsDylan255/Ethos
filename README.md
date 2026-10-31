@@ -59,6 +59,13 @@ Add a personal motivation as well. Ethos shows it to you when you missed a habit
 - Daily limit, snooze and pause
 - Optional daily overview notification and a motivation notification for missed habits
 
+### Wear OS companion
+For Wear OS 3+ watches such as the Galaxy Watch 4 to 7. The phone stays the only place where data lives;
+the watch shows today and sends taps back.
+- **Today list:** tick off habits right on your wrist, with a short vibration
+- **Tile:** today's progress ring and what is still open, one swipe away from the watch face
+- **"Erledigt" button** on habit reminders, on the phone and on the watch
+
 ### Your data
 - **Backup and restore** as a JSON file
 - **Export as a table (CSV)** for analysis: one row per habit and day with status, success (1/0) and note.
@@ -72,10 +79,25 @@ Add a personal motivation as well. Ethos shows it to you when you missed a habit
 
 ## Installation
 
-1. Download `Ethos-1.0.0.apk` from the [latest release](https://github.com/ItsDylan255/Ethos/releases/latest).
+1. Download `Ethos-1.1.0.apk` from the [latest release](https://github.com/ItsDylan255/Ethos/releases/latest).
 2. Open it on your phone and allow installing apps from this source when Android asks.
 
 Requires Android 8.0 (API 26) or newer.
+
+### Watch app
+The watch app is not on the Play Store, so it is installed over ADB:
+
+1. On the watch: *Settings → About watch → Software* and tap *Software version* five times to enable developer options.
+2. *Settings → Developer options*: turn on *ADB debugging* and *Wireless debugging*, then tap *Pair new device*.
+3. On your computer (Android platform tools):
+
+```bash
+adb pair <ip>:<pairing-port>
+adb connect <ip>:<port>
+adb install Ethos-Wear-1.1.0.apk
+```
+
+Phone and watch apps must come from the same build (same signing key), otherwise they cannot talk to each other.
 
 ## Building from source
 
@@ -99,3 +121,5 @@ Kotlin · Jetpack Compose · Material 3 · Room · DataStore · AlarmManager
 | `domain/` | Pure logic: `HabitLogic` (build/avoid, streaks, success rates), `ReminderPlanner` |
 | `reminders/` | Alarms, notifications, boot and time-change receivers |
 | `ui/` | Compose screens per area (Today, Habits, Statistics, Reminders, Settings) and their view models |
+| `watch/` | Sync with the watch over the Wearable Data Layer |
+| `wear/` (module) | Wear OS app: Today list, tile |

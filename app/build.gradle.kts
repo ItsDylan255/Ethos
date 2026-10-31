@@ -15,8 +15,8 @@ android {
         applicationId = "com.example.ethos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
     }
 
     // Release signing comes from keystore.properties in the project root (not in git).
@@ -66,6 +66,12 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
 
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // Galaxy Watch / Wear OS companion
+    implementation("com.google.android.gms:play-services-wearable:18.2.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+    // play-services pulls in an old Fragment; ActivityResult APIs need 1.3+.
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
 
     testImplementation("junit:junit:4.13.2")
 }

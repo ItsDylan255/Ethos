@@ -26,6 +26,14 @@
         <receiver android:name=".reminders.ReminderReceiver" android:exported="false" />
         <receiver android:name=".reminders.DailyReceiver" android:exported="false" />
 
+        <!-- Taps and refresh requests from the Ethos watch app. -->
+        <service android:name=".watch.WatchListenerService" android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/ethos" />
+            </intent-filter>
+        </service>
+
         <receiver android:name=".reminders.BootReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

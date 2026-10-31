@@ -66,5 +66,7 @@ class ReminderScheduler(private val context: Context) {
         const val REGULAR_OFFSET = 0L
         const val SNOOZE_OFFSET = 1_000_000L
         const val NOTIFICATION_SNOOZE_OFFSET = 2_000_000L
+        const val ACTION_DONE = "com.example.ethos.REMINDER_DONE"
+        const val NOTIFICATION_DONE_OFFSET = 3_000_000L
     }
 }

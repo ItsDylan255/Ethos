@@ -12,11 +12,15 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.ethos.EthosApp
 import com.example.ethos.MainActivity
 import com.example.ethos.R
+import com.example.ethos.data.HabitType
+import com.example.ethos.data.LogStatus
 import com.example.ethos.data.Reminder
+import com.example.ethos.watch.WatchSync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 object ReminderNotifier {
     const val CHANNEL_ID = "reminders"
@@ -26,8 +30,9 @@ object ReminderNotifier {
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
+    /** [canComplete]: the reminder belongs to a habit you build that is not done today -> "Erledigt" button. */
     @SuppressLint("MissingPermission") // areNotificationsEnabled() covers permission + settings
-    fun show(context: Context, reminder: Reminder, habitTitle: String?) {
+    fun show(context: Context, reminder: Reminder, habitTitle: String?, canComplete: Boolean = false) {
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
 
@@ -47,15 +52,26 @@ object ReminderNotifier {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val title = reminder.title.ifBlank { habitTitle ?: "Erinnerung" }
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(habitTitle?.takeIf { it != title })
             .setContentIntent(open)
             .setAutoCancel(true)
-            .addAction(0, "Später (${reminder.snoozeMinutes} Min)", snooze)
-            .build()
-        manager.notify(reminder.id.toInt(), notification)
+        // Actions are mirrored to the watch, so "Erledigt" works there as well.
+        if (canComplete) {
+            val done = PendingIntent.getBroadcast(
+                context,
+                (reminder.id + ReminderScheduler.NOTIFICATION_DONE_OFFSET).toInt(),
+                Intent(context, ReminderReceiver::class.java)
+                    .setAction(ReminderScheduler.ACTION_DONE)
+                    .putExtra(ReminderScheduler.EXTRA_ID, reminder.id),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            builder.addAction(0, "Erledigt", done)
+        }
+        builder.addAction(0, "Später (${reminder.snoozeMinutes} Min)", snooze)
+        manager.notify(reminder.id.toInt(), builder.build())
     }
 }
 
@@ -83,12 +99,21 @@ class ReminderReceiver : BroadcastReceiver() {
                 container.scheduler.scheduleSnooze(id, reminder.snoozeMinutes)
             }
 
+            ReminderScheduler.ACTION_DONE -> {
+                NotificationManagerCompat.from(app).cancel(id.toInt())
+                val habitId = reminder.habitId ?: return
+                container.repository.setLog(habitId, LocalDate.now(), LogStatus.COMPLETED)
+                WatchSync.push(app)
+            }
+
             ReminderScheduler.ACTION_FIRE, ReminderScheduler.ACTION_FIRE_SNOOZED -> {
                 if (!reminder.isEnabled) return
                 val habit = reminder.habitId?.let { container.repository.getHabit(it) }?.habit
                 // Habit-bound reminders stay silent for archived habits.
                 if (reminder.habitId == null || (habit != null && !habit.isArchived)) {
-                    ReminderNotifier.show(app, reminder, habit?.title)
+                    val canComplete = habit != null && habit.type == HabitType.BUILD &&
+                        container.repository.statusOn(habit.id, LocalDate.now()) != LogStatus.COMPLETED
+                    ReminderNotifier.show(app, reminder, habit?.title, canComplete)
                 }
                 if (action == ReminderScheduler.ACTION_FIRE) {
                     container.repository.registerFire(reminder)

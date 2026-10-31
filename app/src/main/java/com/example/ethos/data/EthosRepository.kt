@@ -9,6 +9,14 @@ import com.example.ethos.reminders.ReminderScheduler
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
+data class TodayEntry(
+    val habit: Habit,
+    val status: LogStatus?,
+    val streak: Int?,
+    val weekDone: Int?,
+    val weekTarget: Int?,
+)
+
 class EthosRepository(
     private val db: EthosDatabase,
     private val scheduler: ReminderScheduler,
@@ -74,6 +82,8 @@ class EthosRepository(
 
     // ---- Logs ----
     fun observeAllLogs(): Flow<List<HabitLog>> = logs.observeAll()
+
+    suspend fun statusOn(habitId: Long, date: LocalDate): LogStatus? = logs.get(habitId, date.toString())?.status
 
     /** status == null removes the entry (= NOT_RECORDED for BUILD, implicitly "avoided" for AVOID). */
     suspend fun setLog(habitId: Long, date: LocalDate, status: LogStatus?) {
@@ -290,6 +300,28 @@ class EthosRepository(
     suspend fun habitsDueToday(today: LocalDate = LocalDate.now()): List<Habit> {
         val plan = loadPlan()
         return plan.habits.filter { plan.isDue(it, today) }.sortedBy { if (it.type == HabitType.BUILD) 0 else 1 }
+    }
+
+    /** Today's habits with their state, in the order of the Today tab; this is what the watch shows. */
+    suspend fun todayEntries(today: LocalDate = LocalDate.now()): List<TodayEntry> {
+        val plan = loadPlan()
+        val weekStart = HabitLogic.weekStart(today)
+        return plan.habits.filter { plan.isDue(it, today) }
+            .sortedBy { if (it.type == HabitType.BUILD) 0 else 1 }
+            .map { habit ->
+                val schedule = plan.scheduleMap[habit.id]
+                val history = plan.logMap[habit.id].orEmpty()
+                val ex = plan.exceptionMap[habit.id] ?: ScheduleExceptions.NONE
+                val weekly = schedule?.recurrenceType == RecurrenceType.TIMES_PER_WEEK
+                val start = HabitLogic.startOf(habit, schedule, history.keys.minByOrNull { it.toEpochDay() })
+                TodayEntry(
+                    habit = habit,
+                    status = history[today],
+                    streak = HabitLogic.currentStreak(habit, schedule, history, today, ex),
+                    weekDone = if (weekly) HabitLogic.weekProgress(history, weekStart) else null,
+                    weekTarget = if (weekly) HabitLogic.weekTarget(habit, schedule, history, weekStart, start).total else null,
+                )
+            }
     }
 
     /** Habits that were missed once and are due today ("never miss twice"). */
