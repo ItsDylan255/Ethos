@@ -16,8 +16,6 @@ All data stays on your device.
   <a href="https://github.com/ItsDylan255/Ethos/releases/latest"><b>Download the latest APK</b></a>
 </p>
 
-> The app interface is currently in German.
-
 ## Features
 
 ### Two kinds of habits
@@ -69,8 +67,10 @@ the watch shows today and sends taps back.
 ### Your data
 - **Backup and restore** as a JSON file
 - **Export as a table (CSV)** for analysis: one row per habit and day with status, success (1/0) and note.
-  Opens directly in Excel or LibreOffice; in pandas use `pd.read_csv(path, sep=";", encoding="utf-8-sig")`.
+  Opens directly in Excel or LibreOffice; in pandas use `pd.read_csv(path, sep=None, engine="python", encoding="utf-8-sig")`.
+  Columns and values follow the app language (semicolons in German, commas in English).
 - Light, dark and system theme, plus Material You colors on Android 12 and newer
+- **English and German**: follows the system language, or pick one under *Settings → Language*
 
 <p align="center">
   <img src="docs/screenshots/edit.png" width="30%" alt="Editing a habit with the four laws" />
@@ -79,7 +79,7 @@ the watch shows today and sends taps back.
 
 ## Installation
 
-1. Download `Ethos-1.1.0.apk` from the [latest release](https://github.com/ItsDylan255/Ethos/releases/latest).
+1. Download `Ethos-1.1.1.apk` from the [latest release](https://github.com/ItsDylan255/Ethos/releases/latest).
 2. Open it on your phone and allow installing apps from this source when Android asks.
 
 Requires Android 8.0 (API 26) or newer.
@@ -94,7 +94,7 @@ The watch app is not on the Play Store, so it is installed over ADB:
 ```bash
 adb pair <ip>:<pairing-port>
 adb connect <ip>:<port>
-adb install Ethos-Wear-1.1.0.apk
+adb install Ethos-Wear-1.1.1.apk
 ```
 
 Phone and watch apps must come from the same build (same signing key), otherwise they cannot talk to each other.

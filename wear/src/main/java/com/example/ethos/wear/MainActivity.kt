@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -49,16 +51,16 @@ private fun TodayScreen(vm: TodayViewModel = viewModel()) {
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
         ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-            item { ListHeader { Text("Heute") } }
+            item { ListHeader { Text(stringResource(R.string.today)) } }
             when {
                 today == null -> item {
-                    Hint(state.message ?: if (state.loading) "Warte auf das Handy …" else "Öffne Ethos auf dem Handy")
+                    Hint(state.message ?: stringResource(if (state.loading) R.string.waiting_for_phone else R.string.open_on_phone))
                 }
-                today.items.isEmpty() -> item { Hint("Für heute ist nichts geplant.") }
+                today.items.isEmpty() -> item { Hint(stringResource(R.string.nothing_today)) }
                 else -> {
                     item {
                         Text(
-                            "${today.done} von ${today.items.size} geschafft",
+                            stringResource(R.string.done_of, today.done, today.items.size),
                             style = MaterialTheme.typography.caption1,
                             color = MaterialTheme.colors.onSurfaceVariant,
                         )
@@ -93,16 +95,20 @@ private fun HabitChip(habit: WatchHabit, onToggle: () -> Unit) {
     )
 }
 
+@Composable
 private fun subtitle(h: WatchHabit): String = when {
-    h.avoid -> if (h.success) streakOr(h, "Vermieden") else "Doch gemacht"
-    h.weekTarget != null -> "${h.weekDone ?: 0} von ${h.weekTarget} diese Woche"
-    h.status == WatchHabit.STATUS_FAILED -> "Nicht gemacht"
-    h.success -> streakOr(h, "Erledigt")
-    else -> streakOr(h, "Offen")
+    h.avoid -> if (h.success) streakOr(h, R.string.status_avoided) else stringResource(R.string.status_done_anyway)
+    h.weekTarget != null -> stringResource(R.string.week_progress, h.weekDone ?: 0, h.weekTarget)
+    h.status == WatchHabit.STATUS_FAILED -> stringResource(R.string.status_not_done)
+    h.success -> streakOr(h, R.string.status_done)
+    else -> streakOr(h, R.string.status_open)
 }
 
-private fun streakOr(h: WatchHabit, fallback: String): String =
-    if ((h.streak ?: 0) >= 2) "${h.streak} Tage in Folge" else fallback
+@Composable
+private fun streakOr(h: WatchHabit, fallback: Int): String {
+    val streak = h.streak ?: 0
+    return if (streak >= 2) pluralStringResource(R.plurals.streak_days, streak, streak) else stringResource(fallback)
+}
 
 @Composable
 private fun Hint(text: String) {

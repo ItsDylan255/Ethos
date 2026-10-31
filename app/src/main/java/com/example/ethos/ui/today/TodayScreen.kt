@@ -53,10 +53,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.R
 import com.example.ethos.data.Habit
 import com.example.ethos.data.HabitType
 import com.example.ethos.data.LogStatus
@@ -73,15 +76,14 @@ import com.example.ethos.ui.components.Pill
 import com.example.ethos.ui.components.ProgressBar
 import com.example.ethos.ui.components.SectionLabel
 import com.example.ethos.ui.displayTitle
+import com.example.ethos.ui.localizedFormatter
 import com.example.ethos.ui.playCompletionSound
 import com.example.ethos.ui.theme.typeColor
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
-private val HEADER_DATE = DateTimeFormatter.ofPattern("EEEE, d. MMMM", Locale.GERMAN)
-private val SHORT_DATE = DateTimeFormatter.ofPattern("EEE, d. MMM", Locale.GERMAN)
+private val HEADER_DATE get() = localizedFormatter("EEEE, d. MMMM", "EEEE, MMMM d")
+private val SHORT_DATE get() = localizedFormatter("EEE, d. MMM", "EEE, MMM d")
 
 private data class NoteTarget(
     val habitId: Long,
@@ -124,9 +126,9 @@ fun TodayScreen(
         habitId = item.habit.id,
         habitTitle = item.habit.title,
         label = when {
-            !afterFailure -> "Notiz"
-            item.habit.type == HabitType.BUILD -> "Warum hat es nicht geklappt?"
-            else -> "Was hat dazu geführt?"
+            !afterFailure -> context.getString(R.string.note)
+            item.habit.type == HabitType.BUILD -> context.getString(R.string.why_failed)
+            else -> context.getString(R.string.today_what_led)
         },
         initial = item.note.orEmpty(),
         afterFailure = afterFailure,
@@ -135,7 +137,7 @@ fun TodayScreen(
     fun announce(message: String, habitId: Long) {
         scope.launch {
             snackbar.currentSnackbarData?.dismiss()
-            val result = snackbar.showSnackbar(message, actionLabel = "Rückgängig", duration = SnackbarDuration.Short)
+            val result = snackbar.showSnackbar(message, actionLabel = context.getString(R.string.undo), duration = SnackbarDuration.Short)
             if (result == SnackbarResult.ActionPerformed) vm.undoException(habitId)
         }
     }
@@ -152,7 +154,7 @@ fun TodayScreen(
             noteTarget = NoteTarget(
                 habitId = item.habit.id,
                 habitTitle = item.habit.title,
-                label = "Warum lässt du heute aus?",
+                label = context.getString(R.string.today_skip_why),
                 initial = item.note.orEmpty(),
                 afterFailure = false,
                 skip = true,
@@ -160,7 +162,7 @@ fun TodayScreen(
         },
         onMoveTomorrow = {
             vm.moveToday(item.habit.id, state.date.plusDays(1))
-            announce("Auf morgen verschoben", item.habit.id)
+            announce(context.getString(R.string.today_moved_tomorrow), item.habit.id)
         },
         onPickDay = { moveFor = item },
         onUndoMove = { vm.undoException(item.habit.id) },
@@ -171,14 +173,14 @@ fun TodayScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             EthosTopBar(
-                title = "Heute",
+                title = stringResource(R.string.tab_today),
                 subtitle = state.date.format(HEADER_DATE),
                 actions = {
                     IconButton(onClick = onAddHabit) {
-                        Icon(Icons.Default.Add, contentDescription = "Habit hinzufügen")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_habit))
                     }
                     IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Einstellungen")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                     }
                 },
             )
@@ -186,7 +188,7 @@ fun TodayScreen(
     ) { padding ->
         if (state.items.isEmpty()) {
             EmptyState(
-                "Für heute ist nichts geplant.\nLege über + ein Habit an.",
+                stringResource(R.string.today_empty),
                 Modifier.padding(padding),
             )
         } else {
@@ -208,11 +210,11 @@ fun TodayScreen(
                     }
                 }
                 if (build.isNotEmpty()) {
-                    item { SectionLabel("Gewohnheit aufbauen", Modifier.padding(top = 6.dp)) }
+                    item { SectionLabel(stringResource(R.string.type_build), Modifier.padding(top = 6.dp)) }
                     items(build, key = { it.habit.id }) { item -> TodayCard(item, actionsFor(item)) }
                 }
                 if (avoid.isNotEmpty()) {
-                    item { SectionLabel("Gewohnheit ablegen", Modifier.padding(top = 6.dp)) }
+                    item { SectionLabel(stringResource(R.string.type_avoid), Modifier.padding(top = 6.dp)) }
                     items(avoid, key = { it.habit.id }) { item -> TodayCard(item, actionsFor(item)) }
                 }
             }
@@ -224,13 +226,13 @@ fun TodayScreen(
             title = t.habitTitle,
             label = t.label,
             initial = t.initial,
-            dismissLabel = if (t.afterFailure) "Überspringen" else "Abbrechen",
-            confirmLabel = if (t.skip) "Auslassen" else "Speichern",
+            dismissLabel = stringResource(if (t.afterFailure) R.string.note_later else R.string.cancel),
+            confirmLabel = stringResource(if (t.skip) R.string.skip_day else R.string.save),
             required = t.skip,
             onSave = { text ->
                 if (t.skip) {
                     vm.skipToday(t.habitId, text)
-                    announce("Heute ausgelassen", t.habitId)
+                    announce(context.getString(R.string.today_skipped), t.habitId)
                 } else {
                     vm.saveNote(t.habitId, text)
                 }
@@ -245,7 +247,7 @@ fun TodayScreen(
             minDate = state.date.plusDays(1),
             onPick = { day ->
                 vm.moveToday(item.habit.id, day)
-                announce("Verschoben auf ${day.format(SHORT_DATE)}", item.habit.id)
+                announce(context.getString(R.string.moved_to, day.format(SHORT_DATE)), item.habit.id)
                 moveFor = null
             },
             onDismiss = { moveFor = null },
@@ -264,13 +266,13 @@ private fun SummaryCard(build: List<TodayItem>, avoid: List<TodayItem>) {
     val held = avoid.count { it.state == DayState.AVOIDED }
     EthosCard(spacing = 8.dp) {
         if (build.isNotEmpty()) {
-            Text("$done von ${build.size} erledigt", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.today_done_of, done, build.size), style = MaterialTheme.typography.headlineSmall)
             ProgressBar(done.toFloat() / build.size, cs.primary)
         }
         if (avoid.isNotEmpty()) {
             if (build.isNotEmpty()) Spacer(Modifier.height(6.dp))
             Text(
-                "$held von ${avoid.size} Gewohnheiten gehalten",
+                stringResource(R.string.today_held_of, held, avoid.size),
                 style = if (build.isEmpty()) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.bodyMedium,
                 color = if (build.isEmpty()) cs.onSurface else cs.tertiary,
             )
@@ -286,17 +288,16 @@ private fun MissedHintCard(habits: List<Habit>, onOpen: () -> Unit, onDismiss: (
     EthosCard(onClick = onOpen, spacing = 4.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "NIE ZWEIMAL VERPASSEN",
+                stringResource(R.string.never_miss_twice).uppercase(),
                 style = MaterialTheme.typography.labelSmall,
                 color = cs.tertiary,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = onDismiss) { Text("Ausblenden") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.hide)) }
         }
         Text(habits.joinToString(", ") { it.title }, style = MaterialTheme.typography.titleMedium)
         Text(
-            if (habits.size == 1) "1 Gewohnheit ausgelassen – tippe für deine Motivation"
-            else "${habits.size} Gewohnheiten ausgelassen – tippe für deine Motivation",
+            pluralStringResource(R.plurals.missed_hint, habits.size, habits.size),
             style = MaterialTheme.typography.bodySmall,
             color = cs.onSurfaceVariant,
         )
@@ -317,13 +318,13 @@ private fun MotivationSheet(habits: List<Habit>, onDismiss: () -> Unit) {
                 .padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text("Nie zweimal verpassen", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.never_miss_twice), style = MaterialTheme.typography.headlineSmall)
             habits.forEach { habit ->
                 EthosCard(spacing = 6.dp) {
                     Text(habit.title, style = MaterialTheme.typography.titleMedium, color = typeColor(habit.type))
                     if (habit.motivation.isBlank()) {
                         Text(
-                            "Noch keine Motivation hinterlegt. Du kannst sie im Habit unter „Motivation“ ergänzen.",
+                            stringResource(R.string.motivation_missing),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -344,18 +345,20 @@ private fun TodayCard(item: TodayItem, actions: CardActions) {
     val accent = typeColor(habit.type)
     val cs = MaterialTheme.colorScheme
 
+    val weekText = item.weekTarget?.let { target ->
+        if (item.weekExtra > 0) stringResource(R.string.week_progress_extra, item.weekDone ?: 0, target, item.weekExtra)
+        else stringResource(R.string.week_progress, item.weekDone ?: 0, target)
+    }
+    val movedText = item.movedFrom?.let { stringResource(R.string.moved_from, WEEKDAY_SHORT[it.dayOfWeek.value - 1]) }
+    val failed = item.state == DayState.FAILED
+    val avoidText = stringResource(if (failed) R.string.status_done_anyway else R.string.status_avoided)
+    val streak = item.streak ?: 0
+    val streakText = pluralStringResource(R.plurals.streak_days, streak, streak)
     val pills = buildList<Pair<String, Color>> {
-        if (item.weekTarget != null) {
-            val extra = if (item.weekExtra > 0) " · +${item.weekExtra} nachzuholen" else ""
-            add("${item.weekDone ?: 0} von ${item.weekTarget} diese Woche$extra" to accent)
-        }
-        if (item.movedFrom != null) {
-            add("Verschoben von ${WEEKDAY_SHORT[item.movedFrom.dayOfWeek.value - 1]}" to cs.tertiary)
-        }
-        if (!isBuild) {
-            if (item.state == DayState.FAILED) add("Doch gemacht" to cs.error) else add("Vermieden" to accent)
-        }
-        if ((item.streak ?: 0) >= 2) add("${item.streak} Tage in Folge" to cs.onSurfaceVariant)
+        if (weekText != null) add(weekText to accent)
+        if (movedText != null) add(movedText to cs.tertiary)
+        if (!isBuild) add(avoidText to if (failed) cs.error else accent)
+        if (streak >= 2) add(streakText to cs.onSurfaceVariant)
     }
 
     EthosCard(
@@ -411,27 +414,27 @@ private fun TodayCard(item: TodayItem, actions: CardActions) {
             val weekdays = isBuild && item.recurrence == RecurrenceType.WEEKDAYS
             val canSkip = item.recurrence != RecurrenceType.TIMES_PER_WEEK
                 Box {
-                    IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Mehr") }
+                    IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more)) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         if (isBuild) {
-                        DropdownMenuItem(text = { Text("Erledigt") }, onClick = { actions.onSet(LogStatus.COMPLETED); menu = false })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.status_done)) }, onClick = { actions.onSet(LogStatus.COMPLETED); menu = false })
                         DropdownMenuItem(
-                            text = { Text("Nicht gemacht") },
+                            text = { Text(stringResource(R.string.status_not_done)) },
                             onClick = { actions.onSet(LogStatus.FAILED); menu = false; actions.onFailed() },
                         )
-                        DropdownMenuItem(text = { Text("Heute zurücksetzen") }, onClick = { actions.onSet(null); menu = false })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.reset_today)) }, onClick = { actions.onSet(null); menu = false })
                         DropdownMenuItem(
-                            text = { Text(if (item.note == null) "Notiz hinzufügen" else "Notiz bearbeiten") },
+                            text = { Text(stringResource(if (item.note == null) R.string.add_note else R.string.edit_note)) },
                             onClick = { menu = false; actions.onNote() },
                         )
                         } else {
-                        DropdownMenuItem(text = { Text("Vermieden") }, onClick = { actions.onSet(null); menu = false })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.status_avoided)) }, onClick = { actions.onSet(null); menu = false })
                         DropdownMenuItem(
-                            text = { Text("Doch gemacht") },
+                            text = { Text(stringResource(R.string.status_done_anyway)) },
                             onClick = { actions.onSet(LogStatus.FAILED); menu = false; actions.onFailed() },
                         )
                         DropdownMenuItem(
-                            text = { Text(if (item.note == null) "Notiz hinzufügen" else "Notiz bearbeiten") },
+                            text = { Text(stringResource(if (item.note == null) R.string.add_note else R.string.edit_note)) },
                             onClick = { menu = false; actions.onNote() },
                         )
                         }
@@ -439,23 +442,23 @@ private fun TodayCard(item: TodayItem, actions: CardActions) {
                         // Fixed weekdays can be moved; every non-weekly schedule can skip a day.
                         if (item.movedFrom != null) {
                             DropdownMenuItem(
-                                text = { Text("Verschiebung rückgängig") },
+                                text = { Text(stringResource(R.string.undo_move)) },
                                 onClick = { menu = false; actions.onUndoMove() },
                             )
                         }
                         if (weekdays) {
                             DropdownMenuItem(
-                                text = { Text("Auf morgen verschieben") },
+                                text = { Text(stringResource(R.string.move_tomorrow)) },
                                 onClick = { menu = false; actions.onMoveTomorrow() },
                             )
                             DropdownMenuItem(
-                                text = { Text("Anderen Tag wählen …") },
+                                text = { Text(stringResource(R.string.pick_day)) },
                                 onClick = { menu = false; actions.onPickDay() },
                             )
                         }
                         if (canSkip) {
                             DropdownMenuItem(
-                                text = { Text("Heute auslassen") },
+                                text = { Text(stringResource(R.string.skip_today)) },
                                 onClick = { menu = false; actions.onSkip() },
                             )
                         }

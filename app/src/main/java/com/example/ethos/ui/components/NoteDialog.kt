@@ -11,6 +11,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.example.ethos.R
 
 /** Short free-text note. Saving a blank text removes the note, unless [required] blocks saving it. */
 @Composable
@@ -20,8 +22,8 @@ fun NoteDialog(
     initial: String,
     onSave: (String) -> Unit,
     onDismiss: () -> Unit,
-    dismissLabel: String = "Abbrechen",
-    confirmLabel: String = "Speichern",
+    dismissLabel: String = stringResource(R.string.cancel),
+    confirmLabel: String = stringResource(R.string.save),
     required: Boolean = false,
 ) {
     var text by remember { mutableStateOf(initial) }

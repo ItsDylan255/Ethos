@@ -1,6 +1,7 @@
 package com.example.ethos.ui.settings
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -31,10 +32,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.R
+import com.example.ethos.data.AppLanguage
+import com.example.ethos.data.AppLocale
 import com.example.ethos.data.ThemeMode
 import com.example.ethos.ui.AppViewModelProvider
 import com.example.ethos.ui.components.CardTitle
@@ -75,7 +80,7 @@ fun SettingsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { EthosTopBar(title = "Einstellungen", onBack = onBack) },
+        topBar = { EthosTopBar(title = stringResource(R.string.settings), onBack = onBack) },
     ) { padding ->
         Column(
             Modifier
@@ -85,9 +90,13 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             EthosCard(spacing = 12.dp) {
-                CardTitle("Darstellung")
+                CardTitle(stringResource(R.string.appearance))
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    listOf(ThemeMode.SYSTEM to "System", ThemeMode.LIGHT to "Hell", ThemeMode.DARK to "Dunkel")
+                    listOf(
+                        ThemeMode.SYSTEM to stringResource(R.string.theme_system),
+                        ThemeMode.LIGHT to stringResource(R.string.theme_light),
+                        ThemeMode.DARK to stringResource(R.string.theme_dark),
+                    )
                         .forEachIndexed { index, (mode, label) ->
                             SegmentedButton(
                                 selected = settings.themeMode == mode,
@@ -97,8 +106,8 @@ fun SettingsScreen(
                         }
                 }
                 SettingRow(
-                    title = "Material You",
-                    subtitle = if (supportsDynamic) "Farben vom Hintergrundbild" else "Erst ab Android 12 verfügbar",
+                    title = stringResource(R.string.material_you),
+                    subtitle = stringResource(if (supportsDynamic) R.string.dynamic_on else R.string.dynamic_off),
                     checked = settings.dynamicColor && supportsDynamic,
                     enabled = supportsDynamic,
                     onChange = vm::setDynamicColor,
@@ -106,10 +115,34 @@ fun SettingsScreen(
             }
 
             EthosCard(spacing = 12.dp) {
-                CardTitle("Hinweise")
+                CardTitle(stringResource(R.string.language))
+                // Stored outside DataStore and applied by recreating the screen (see AppLocale).
+                val language = remember { AppLocale.get(context) }
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    listOf(
+                        AppLanguage.SYSTEM to stringResource(R.string.language_system),
+                        AppLanguage.GERMAN to stringResource(R.string.language_de),
+                        AppLanguage.ENGLISH to stringResource(R.string.language_en),
+                    ).forEachIndexed { index, (option, label) ->
+                        SegmentedButton(
+                            selected = language == option,
+                            onClick = {
+                                if (option != language) {
+                                    vm.setLanguage(option)
+                                    (context as? Activity)?.recreate()
+                                }
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(index, 3),
+                        ) { Text(label) }
+                    }
+                }
+            }
+
+            EthosCard(spacing = 12.dp) {
+                CardTitle(stringResource(R.string.hints))
                 SettingRow(
-                    title = "Nie zweimal verpassen",
-                    subtitle = "Dezenter Hinweis, wenn ein Habit gestern ausgefallen ist",
+                    title = stringResource(R.string.never_miss_twice),
+                    subtitle = stringResource(R.string.missed_hint_sub),
                     checked = settings.missedHint,
                     enabled = true,
                     onChange = vm::setMissedHint,
@@ -117,39 +150,38 @@ fun SettingsScreen(
             }
 
             EthosCard(spacing = 12.dp) {
-                CardTitle("Benachrichtigungen")
+                CardTitle(stringResource(R.string.notifications))
                 SettingRow(
-                    title = "Tagesübersicht",
-                    subtitle = "Alle Habits des Tages, in der Reihenfolge von „Heute“",
+                    title = stringResource(R.string.daily_overview),
+                    subtitle = stringResource(R.string.daily_overview_sub),
                     checked = settings.dailyReportEnabled,
                     enabled = true,
                     onChange = { on -> vm.setDailyReport(on); if (on) askNotificationPermission() },
                 )
                 if (settings.dailyReportEnabled) {
-                    TimeField("Uhrzeit", minutesToTime(settings.dailyReportMinutes)) {
+                    TimeField(stringResource(R.string.time), minutesToTime(settings.dailyReportMinutes)) {
                         vm.setDailyReportTime(it.hour * 60 + it.minute)
                     }
                 }
                 HairlineDivider()
                 SettingRow(
-                    title = "Motivation bei ausgelassenem Habit",
-                    subtitle = "Deine eigene Motivation, wenn du ein Habit einmal ausgelassen hast",
+                    title = stringResource(R.string.motivation_notif),
+                    subtitle = stringResource(R.string.motivation_notif_sub),
                     checked = settings.motivationEnabled,
                     enabled = true,
                     onChange = { on -> vm.setMotivation(on); if (on) askNotificationPermission() },
                 )
                 if (settings.motivationEnabled) {
-                    TimeField("Uhrzeit", minutesToTime(settings.motivationMinutes)) {
+                    TimeField(stringResource(R.string.time), minutesToTime(settings.motivationMinutes)) {
                         vm.setMotivationTime(it.hour * 60 + it.minute)
                     }
                 }
             }
 
             EthosCard(spacing = 12.dp) {
-                CardTitle("Datensicherung")
+                CardTitle(stringResource(R.string.backup))
                 Text(
-                    "Speichert Habits, Verlauf, Notizen und Erinnerungen als Datei. " +
-                        "Beim Importieren werden alle aktuellen Daten ersetzt.",
+                    stringResource(R.string.backup_text),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -157,23 +189,23 @@ fun SettingsScreen(
                     OutlinedButton(
                         onClick = { exportLauncher.launch("ethos-backup-${LocalDate.now()}.json") },
                         modifier = Modifier.weight(1f),
-                    ) { Text("Exportieren") }
+                    ) { Text(stringResource(R.string.export)) }
                     OutlinedButton(
                         onClick = { importLauncher.launch(arrayOf("*/*")) },
                         modifier = Modifier.weight(1f),
-                    ) { Text("Importieren") }
+                    ) { Text(stringResource(R.string.import_)) }
                 }
                 HairlineDivider()
                 Text(
-                    "Auswertung: eine Tabelle (CSV) mit einer Zeile pro Habit und Tag – Status, Erfolg (1/0) und Notiz. " +
-                        "Öffnet sich direkt in Excel oder LibreOffice.",
+                    stringResource(R.string.csv_text),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                val csvPrefix = stringResource(R.string.csv_file_prefix)
                 OutlinedButton(
-                    onClick = { csvLauncher.launch("ethos-auswertung-${LocalDate.now()}.csv") },
+                    onClick = { csvLauncher.launch("$csvPrefix-${LocalDate.now()}.csv") },
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Als Tabelle exportieren") }
+                ) { Text(stringResource(R.string.csv_export)) }
                 message?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 }
@@ -184,14 +216,14 @@ fun SettingsScreen(
     pendingImport?.let { uri ->
         AlertDialog(
             onDismissRequest = { pendingImport = null },
-            title = { Text("Daten ersetzen?") },
-            text = { Text("Alle aktuellen Daten werden durch die Sicherung ersetzt. Das lässt sich nicht rückgängig machen.") },
+            title = { Text(stringResource(R.string.replace_title)) },
+            text = { Text(stringResource(R.string.replace_text)) },
             confirmButton = {
                 TextButton(onClick = { vm.importFrom(uri); pendingImport = null }) {
-                    Text("Ersetzen", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.replace), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { pendingImport = null }) { Text("Abbrechen") } },
+            dismissButton = { TextButton(onClick = { pendingImport = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }

@@ -1,0 +1,279 @@
+<resources>
+    <!-- Common -->
+    <string name="cancel">Abbrechen</string>
+    <string name="save">Speichern</string>
+    <string name="ok">OK</string>
+    <string name="delete">Löschen</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="more">Mehr</string>
+    <string name="back">Zurück</string>
+    <string name="remove">Entfernen</string>
+    <string name="none">Keine</string>
+    <string name="archive">Archivieren</string>
+    <string name="reactivate">Reaktivieren</string>
+    <string name="move">Verschieben</string>
+    <string name="undo">Rückgängig</string>
+    <string name="settings">Einstellungen</string>
+    <string name="add_habit">Habit hinzufügen</string>
+    <string name="motivation">Motivation</string>
+    <string name="note">Notiz</string>
+    <string name="notes">Notizen</string>
+    <string name="note_optional">Notiz (optional)</string>
+    <string name="why_failed">Warum hat es nicht geklappt?</string>
+    <string name="never_miss_twice">Nie zweimal verpassen</string>
+    <string name="type_build">Gewohnheit aufbauen</string>
+    <string name="type_avoid">Gewohnheit ablegen</string>
+    <string name="status_done">Erledigt</string>
+    <string name="status_not_done">Nicht gemacht</string>
+    <string name="status_avoided">Vermieden</string>
+    <string name="status_done_anyway">Doch gemacht</string>
+    <string name="status_no_entry">Keine Angabe</string>
+    <string name="x_of_y">%1$d von %2$d</string>
+    <string name="percent">%1$d %%</string>
+    <string name="moved_to">Verschoben auf %1$s</string>
+    <string name="delete_habit_title">„%1$s“ löschen?</string>
+    <string name="delete_habit_text">Das Habit mit Verlauf, Notizen und Erinnerungen wird endgültig gelöscht. Zum Aufheben gibt es nur Archivieren.</string>
+    <plurals name="streak_days">
+        <item quantity="one">%d Tag in Folge</item>
+        <item quantity="other">%d Tage in Folge</item>
+    </plurals>
+    <plurals name="habit_count">
+        <item quantity="one">%d Gewohnheit</item>
+        <item quantity="other">%d Gewohnheiten</item>
+    </plurals>
+
+    <!-- Tabs -->
+    <string name="tab_today">Heute</string>
+    <string name="tab_habits">Habits</string>
+    <string name="tab_stats">Statistik</string>
+    <string name="tab_reminders">Erinnerungen</string>
+
+    <!-- Today -->
+    <string name="today_empty">Für heute ist nichts geplant.\nLege über + ein Habit an.</string>
+    <string name="today_what_led">Was hat dazu geführt?</string>
+    <string name="today_skip_why">Warum lässt du heute aus?</string>
+    <string name="today_moved_tomorrow">Auf morgen verschoben</string>
+    <string name="today_skipped">Heute ausgelassen</string>
+    <string name="note_later">Überspringen</string>
+    <string name="skip_day">Auslassen</string>
+    <string name="today_done_of">%1$d von %2$d erledigt</string>
+    <string name="today_held_of">%1$d von %2$d Gewohnheiten gehalten</string>
+    <string name="hide">Ausblenden</string>
+    <plurals name="missed_hint">
+        <item quantity="one">%d Gewohnheit ausgelassen – tippe für deine Motivation</item>
+        <item quantity="other">%d Gewohnheiten ausgelassen – tippe für deine Motivation</item>
+    </plurals>
+    <string name="motivation_missing">Noch keine Motivation hinterlegt. Du kannst sie im Habit unter „Motivation“ ergänzen.</string>
+    <string name="week_progress">%1$d von %2$d diese Woche</string>
+    <string name="week_progress_extra">%1$d von %2$d diese Woche · +%3$d nachzuholen</string>
+    <string name="moved_from">Verschoben von %1$s</string>
+    <string name="reset_today">Heute zurücksetzen</string>
+    <string name="add_note">Notiz hinzufügen</string>
+    <string name="edit_note">Notiz bearbeiten</string>
+    <string name="undo_move">Verschiebung rückgängig</string>
+    <string name="move_tomorrow">Auf morgen verschieben</string>
+    <string name="pick_day">Anderen Tag wählen …</string>
+    <string name="skip_today">Heute auslassen</string>
+
+    <!-- Habit list -->
+    <string name="habits_empty">Keine Habits.</string>
+    <string name="move_up">Nach oben</string>
+    <string name="move_down">Nach unten</string>
+    <string name="hide_archive">Archiv ausblenden</string>
+    <string name="show_archive">Archiv anzeigen (%1$d)</string>
+
+    <!-- Habit editor -->
+    <string name="habit_edit_title">Habit bearbeiten</string>
+    <string name="habit_new_title">Neues Habit</string>
+    <string name="type_build_long">Gute Gewohnheit aufbauen</string>
+    <string name="type_avoid_long">Schlechte Gewohnheit ablegen</string>
+    <string name="field_name">Name</string>
+    <string name="field_description">Beschreibung (optional)</string>
+    <string name="four_laws">Die vier Gesetze</string>
+    <string name="laws_filled">%1$d von 4</string>
+    <string name="field_motivation">Deine Motivation (optional)</string>
+    <string name="motivation_hint">Warum machst du das? Wofür lohnt es sich?</string>
+    <string name="schedule">Zeitplan</string>
+    <string name="several_per_week">Mehrmals\npro Woche</string>
+    <string name="weekly_goal">Ziel pro Woche</string>
+    <string name="catch_up">Verpasstes nachholen</string>
+    <string name="catch_up_hint">Fehlende Einheiten der Vorwoche kommen dazu (höchstens +2)</string>
+    <string name="start_date">Startdatum</string>
+    <string name="end_date">Enddatum</string>
+    <string name="reset_stats">Statistik zurücksetzen</string>
+    <string name="reset_stats_title">Statistik zurücksetzen?</string>
+    <string name="reset_stats_text">Verlauf, Notizen und ausgelassene Tage werden gelöscht und das Habit startet heute neu. Name, Beschreibung, Motivation und deine Strategien bleiben erhalten.</string>
+    <string name="reset">Zurücksetzen</string>
+    <string name="purge_title">Frühere Einträge löschen?</string>
+    <string name="purge_text">Vor dem neuen Startdatum (%1$s) gibt es %2$d Einträge (Status, Notizen, ausgelassene Tage). Sie werden beim Speichern endgültig gelöscht.</string>
+    <string name="purge_confirm">Löschen und speichern</string>
+    <string-array name="build_law_labels">
+        <item>Offensichtlich machen</item>
+        <item>Attraktiv machen</item>
+        <item>Einfach machen</item>
+        <item>Befriedigend machen</item>
+    </string-array>
+    <string-array name="avoid_law_labels">
+        <item>Unsichtbar machen</item>
+        <item>Unattraktiv machen</item>
+        <item>Schwierig machen</item>
+        <item>Unbefriedigend machen</item>
+    </string-array>
+    <string-array name="build_law_hints">
+        <item>Wann und wo machst du es? Woran wirst du erinnert?</item>
+        <item>Womit verbindest du es, damit es dir Freude macht?</item>
+        <item>Wie machst du den Start so leicht wie möglich?</item>
+        <item>Wie belohnst du dich direkt danach?</item>
+    </string-array>
+    <string-array name="avoid_law_hints">
+        <item>Wie entfernst du die Auslöser aus deinem Umfeld?</item>
+        <item>Woran erinnerst du dich, damit es seinen Reiz verliert?</item>
+        <item>Welche Hürde baust du davor ein?</item>
+        <item>Welche Konsequenz macht es unangenehm?</item>
+    </string-array>
+
+    <!-- Schedule and reminder summaries -->
+    <string name="schedule_daily">Täglich</string>
+    <string name="schedule_no_days">Keine Tage</string>
+    <string name="schedule_per_week">%1$d× pro Woche</string>
+    <string name="reminder_max_per_day">max. %1$d×/Tag</string>
+    <string name="reminder_no_times">Keine Zeiten</string>
+    <string name="reminder_every">Alle %1$d Min</string>
+    <string name="reminder_random">Zufällig %1$d–%2$d Min</string>
+    <string name="reminder_daily">täglich</string>
+
+    <!-- Habit detail -->
+    <string name="tap_day_to_correct">Tippe auf einen Tag, um ihn nachträglich zu korrigieren.</string>
+    <string name="weekly_goals">Wochenziele</string>
+    <string name="week_number">KW %1$d</string>
+    <string name="my_strategy">Meine Strategie</string>
+    <string name="streak_label">Tage in Folge</string>
+    <string name="this_week">Diese Woche</string>
+    <string name="days_30">30 Tage</string>
+    <string name="overall">Gesamt</string>
+    <string name="prev_month">Vorheriger Monat</string>
+    <string name="next_month">Nächster Monat</string>
+    <string name="skipped_sick">Ausgelassen (z. B. krank)</string>
+    <string name="why_skip_required">Warum lässt du aus? *</string>
+
+    <!-- Statistics -->
+    <string name="stats_subtitle_overview">Diese Woche und die letzten 30 Tage</string>
+    <string name="stats_subtitle_notes">Alle Notizen auf einen Blick</string>
+    <string name="overview">Übersicht</string>
+    <string name="no_data">Noch keine Daten.</string>
+    <string name="avg_rate">Ø Erfolgsquote · 30 Tage</string>
+    <string name="stat_week">%1$d/%2$d Woche</string>
+    <string name="stat_days">%1$d Tage</string>
+
+    <!-- Notes -->
+    <string name="notes_empty">Noch keine Notizen.\nSie entstehen beim Abhaken, bei einem Rückfall oder im Kalender eines Habits.</string>
+    <string name="search_notes">Notizen durchsuchen</string>
+    <string name="clear_search">Suche löschen</string>
+    <string name="filter_all">Alle</string>
+    <string name="filter_missed">Nicht geklappt</string>
+    <string name="filter_done">Geklappt</string>
+    <string name="all_habits">Alle Habits</string>
+    <plurals name="notes_count">
+        <item quantity="one">%d Notiz</item>
+        <item quantity="other">%d Notizen</item>
+    </plurals>
+    <string name="notes_shown">%1$d von %2$d Notizen</string>
+    <string name="no_matches">Keine Treffer.</string>
+
+    <!-- Reminders -->
+    <string name="add_reminder">Erinnerung hinzufügen</string>
+    <string name="reminders_empty">Noch keine Erinnerungen.\nSie können an ein Habit gebunden oder frei sein.</string>
+    <string name="reminder_off">Aus</string>
+    <string name="reminder_paused_until">Pausiert bis %1$s</string>
+    <string name="reminder_next">Nächste: %1$s</string>
+    <string name="reminder_nothing">Nichts geplant</string>
+    <string name="reminder_default_title">Erinnerung</string>
+    <string name="end_pause">Pause beenden</string>
+    <string name="pause_tomorrow">Bis morgen pausieren</string>
+    <string name="reminder_edit_title">Erinnerung bearbeiten</string>
+    <string name="reminder_new_title">Neue Erinnerung</string>
+    <string name="field_title">Titel</string>
+    <string name="field_title_optional">Titel (optional)</string>
+    <string name="link">Verknüpfung</string>
+    <string name="link_free">Frei</string>
+    <string name="reminder_never_ticks">Eine Erinnerung hakt das Habit nie automatisch ab.</string>
+    <string name="mode">Modus</string>
+    <string name="mode_fixed">Feste Uhrzeiten</string>
+    <string name="mode_interval">Intervall</string>
+    <string name="mode_random">Zufälliges Intervall</string>
+    <string name="times">Uhrzeiten</string>
+    <string name="add_time">+ Zeit</string>
+    <string name="every">Alle</string>
+    <string name="earliest_after">Frühestens nach</string>
+    <string name="latest_after">Spätestens nach</string>
+    <string name="suffix_min">" Min"</string>
+    <string name="weekdays">Wochentage</string>
+    <string name="snooze_after">Später erinnern nach</string>
+    <string name="from">Von</string>
+    <string name="until">Bis</string>
+    <string name="limit_per_day">Maximal pro Tag begrenzen</string>
+    <string name="at_most">Höchstens</string>
+
+    <!-- Notifications -->
+    <string name="channel_daily">Tägliche Hinweise</string>
+    <string name="notif_today">Heute: %1$s</string>
+    <string name="notif_keep_going">Heute machst du einfach weiter.</string>
+    <string name="snooze_action">Später (%1$d Min)</string>
+
+    <!-- Settings -->
+    <string name="appearance">Darstellung</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="language">Sprache</string>
+    <string name="language_system">System</string>
+    <string name="dynamic_on">Farben vom Hintergrundbild</string>
+    <string name="dynamic_off">Erst ab Android 12 verfügbar</string>
+    <string name="hints">Hinweise</string>
+    <string name="missed_hint_sub">Dezenter Hinweis, wenn ein Habit gestern ausgefallen ist</string>
+    <string name="notifications">Benachrichtigungen</string>
+    <string name="daily_overview">Tagesübersicht</string>
+    <string name="daily_overview_sub">Alle Habits des Tages, in der Reihenfolge von „Heute“</string>
+    <string name="time">Uhrzeit</string>
+    <string name="motivation_notif">Motivation bei ausgelassenem Habit</string>
+    <string name="motivation_notif_sub">Deine eigene Motivation, wenn du ein Habit einmal ausgelassen hast</string>
+    <string name="backup">Datensicherung</string>
+    <string name="backup_text">Speichert Habits, Verlauf, Notizen und Erinnerungen als Datei. Beim Importieren werden alle aktuellen Daten ersetzt.</string>
+    <string name="export">Exportieren</string>
+    <string name="import_">Importieren</string>
+    <string name="csv_text">Auswertung: eine Tabelle (CSV) mit einer Zeile pro Habit und Tag – Status, Erfolg (1/0) und Notiz. Öffnet sich direkt in Excel oder LibreOffice.</string>
+    <string name="csv_export">Als Tabelle exportieren</string>
+    <string name="csv_file_prefix">ethos-auswertung</string>
+    <string name="replace_title">Daten ersetzen?</string>
+    <string name="replace_text">Alle aktuellen Daten werden durch die Sicherung ersetzt. Das lässt sich nicht rückgängig machen.</string>
+    <string name="replace">Ersetzen</string>
+    <string name="msg_backup_saved">Sicherung gespeichert.</string>
+    <string name="msg_table_saved">Tabelle gespeichert.</string>
+    <string name="msg_export_failed">Export fehlgeschlagen: %1$s</string>
+    <string name="msg_restored">Sicherung wiederhergestellt (%1$d Habits).</string>
+    <string name="msg_import_failed">Import fehlgeschlagen: %1$s</string>
+    <string name="err_not_writable">Datei nicht beschreibbar</string>
+    <string name="err_not_readable">Datei nicht lesbar</string>
+
+    <!-- CSV export -->
+    <string-array name="csv_header">
+        <item>Datum</item>
+        <item>Wochentag</item>
+        <item>Habit</item>
+        <item>Typ</item>
+        <item>Status</item>
+        <item>Erfolg</item>
+        <item>Verschoben auf</item>
+        <item>Notiz</item>
+        <item>Archiviert</item>
+    </string-array>
+    <string name="csv_separator">;</string>
+    <string name="csv_skipped">Ausgelassen</string>
+    <string name="csv_moved">Verschoben</string>
+    <string name="csv_open">Offen</string>
+    <string name="csv_not_planned">Nicht geplant</string>
+    <string name="csv_type_build">Aufbauen</string>
+    <string name="csv_type_avoid">Ablegen</string>
+    <string name="csv_yes">ja</string>
+    <string name="csv_no">nein</string>
+</resources>

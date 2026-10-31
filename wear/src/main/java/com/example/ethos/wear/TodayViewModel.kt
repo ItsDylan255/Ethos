@@ -36,7 +36,7 @@ class TodayViewModel(app: Application) : AndroidViewModel(app), DataClient.OnDat
             reload()
             // Ask the phone for fresh data (new day, changes made while the watch was away).
             if (!link.requestRefresh()) {
-                _state.update { it.copy(loading = false, message = "Handy nicht verbunden") }
+                _state.update { it.copy(loading = false, message = app.getString(R.string.phone_not_connected)) }
             }
         }
     }
@@ -61,7 +61,7 @@ class TodayViewModel(app: Application) : AndroidViewModel(app), DataClient.OnDat
         if (!habit.avoid && updated.success) vibrate(getApplication())
         viewModelScope.launch {
             if (!link.setStatus(habit.id, today.date, newStatus)) {
-                _state.update { s -> s.copy(today = today, message = "Handy nicht verbunden – nicht gespeichert") }
+                _state.update { s -> s.copy(today = today, message = getApplication<Application>().getString(R.string.phone_not_connected_unsaved)) }
             }
         }
     }

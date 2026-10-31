@@ -65,10 +65,10 @@ private fun layout(context: Context, device: DeviceParameters, today: WatchToday
     val open = today?.items?.filterNot { it.success }.orEmpty()
     val main = if (today == null) "–" else "$done/$total"
     val secondary = when {
-        today == null -> "Öffne Ethos auf dem Handy"
-        total == 0 -> "Heute nichts geplant"
-        open.isEmpty() -> "Alles geschafft"
-        else -> "Offen: " + open.joinToString(", ") { it.title }
+        today == null -> context.getString(R.string.open_on_phone)
+        total == 0 -> context.getString(R.string.tile_nothing_today)
+        open.isEmpty() -> context.getString(R.string.all_done)
+        else -> context.getString(R.string.open_list, open.joinToString(", ") { it.title })
     }
 
     val content = EdgeContentLayout.Builder(device)
@@ -79,7 +79,7 @@ private fun layout(context: Context, device: DeviceParameters, today: WatchToday
                 .build(),
         )
         .setPrimaryLabelTextContent(
-            Text.Builder(context, "Heute").setTypography(Typography.TYPOGRAPHY_CAPTION1).setColor(argb(ACCENT)).build(),
+            Text.Builder(context, context.getString(R.string.today)).setTypography(Typography.TYPOGRAPHY_CAPTION1).setColor(argb(ACCENT)).build(),
         )
         .setContent(
             Text.Builder(context, main).setTypography(Typography.TYPOGRAPHY_DISPLAY2).setColor(argb(WHITE)).build(),

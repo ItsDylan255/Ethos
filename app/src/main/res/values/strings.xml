@@ -1,3 +1,285 @@
 <resources>
-    <string name="app_name">Ethos</string>
+    <string name="app_name" translatable="false">Ethos</string>
+
+    <!-- Common -->
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="ok">OK</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="more">More</string>
+    <string name="back">Back</string>
+    <string name="remove">Remove</string>
+    <string name="none">None</string>
+    <string name="archive">Archive</string>
+    <string name="reactivate">Reactivate</string>
+    <string name="move">Move</string>
+    <string name="undo">Undo</string>
+    <string name="settings">Settings</string>
+    <string name="add_habit">Add habit</string>
+    <string name="motivation">Motivation</string>
+    <string name="note">Note</string>
+    <string name="notes">Notes</string>
+    <string name="note_optional">Note (optional)</string>
+    <string name="why_failed">Why didn\'t it work out?</string>
+    <string name="never_miss_twice">Never miss twice</string>
+    <string name="type_build">Build a habit</string>
+    <string name="type_avoid">Break a habit</string>
+    <string name="status_done">Done</string>
+    <string name="status_not_done">Not done</string>
+    <string name="status_avoided">Avoided</string>
+    <string name="status_done_anyway">Did it anyway</string>
+    <string name="status_no_entry">No entry</string>
+    <string name="x_of_y">%1$d of %2$d</string>
+    <string name="percent">%1$d%%</string>
+    <string name="moved_to">Moved to %1$s</string>
+    <string name="delete_habit_title">Delete “%1$s”?</string>
+    <string name="delete_habit_text">The habit with its history, notes and reminders will be deleted permanently. To keep it, archive it instead.</string>
+    <plurals name="streak_days">
+        <item quantity="one">%d day in a row</item>
+        <item quantity="other">%d days in a row</item>
+    </plurals>
+    <plurals name="habit_count">
+        <item quantity="one">%d habit</item>
+        <item quantity="other">%d habits</item>
+    </plurals>
+
+    <!-- Tabs -->
+    <string name="tab_today">Today</string>
+    <string name="tab_habits">Habits</string>
+    <string name="tab_stats">Statistics</string>
+    <string name="tab_reminders">Reminders</string>
+
+    <!-- Today -->
+    <string name="today_empty">Nothing is planned for today.\nAdd a habit with +.</string>
+    <string name="today_what_led">What led to it?</string>
+    <string name="today_skip_why">Why are you skipping today?</string>
+    <string name="today_moved_tomorrow">Moved to tomorrow</string>
+    <string name="today_skipped">Skipped today</string>
+    <string name="note_later">Not now</string>
+    <string name="skip_day">Skip day</string>
+    <string name="today_done_of">%1$d of %2$d done</string>
+    <string name="today_held_of">%1$d of %2$d habits kept</string>
+    <string name="hide">Hide</string>
+    <plurals name="missed_hint">
+        <item quantity="one">%d habit missed – tap for your motivation</item>
+        <item quantity="other">%d habits missed – tap for your motivation</item>
+    </plurals>
+    <string name="motivation_missing">No motivation yet. You can add it to the habit under “Motivation”.</string>
+    <string name="week_progress">%1$d of %2$d this week</string>
+    <string name="week_progress_extra">%1$d of %2$d this week · +%3$d to catch up</string>
+    <string name="moved_from">Moved from %1$s</string>
+    <string name="reset_today">Reset today</string>
+    <string name="add_note">Add note</string>
+    <string name="edit_note">Edit note</string>
+    <string name="undo_move">Undo move</string>
+    <string name="move_tomorrow">Move to tomorrow</string>
+    <string name="pick_day">Choose another day …</string>
+    <string name="skip_today">Skip today</string>
+
+    <!-- Habit list -->
+    <string name="habits_empty">No habits.</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="hide_archive">Hide archive</string>
+    <string name="show_archive">Show archive (%1$d)</string>
+
+    <!-- Habit editor -->
+    <string name="habit_edit_title">Edit habit</string>
+    <string name="habit_new_title">New habit</string>
+    <string name="type_build_long">Build a good habit</string>
+    <string name="type_avoid_long">Break a bad habit</string>
+    <string name="field_name">Name</string>
+    <string name="field_description">Description (optional)</string>
+    <string name="four_laws">The four laws</string>
+    <string name="laws_filled">%1$d of 4</string>
+    <string name="field_motivation">Your motivation (optional)</string>
+    <string name="motivation_hint">Why are you doing this? What makes it worth it?</string>
+    <string name="schedule">Schedule</string>
+    <string name="several_per_week">Several times\nper week</string>
+    <string name="weekly_goal">Goal per week</string>
+    <string name="catch_up">Catch up on missed sessions</string>
+    <string name="catch_up_hint">Missing sessions from last week are added (at most +2)</string>
+    <string name="start_date">Start date</string>
+    <string name="end_date">End date</string>
+    <string name="reset_stats">Reset statistics</string>
+    <string name="reset_stats_title">Reset statistics?</string>
+    <string name="reset_stats_text">History, notes and skipped days are deleted and the habit starts again today. Name, description, motivation and your strategies are kept.</string>
+    <string name="reset">Reset</string>
+    <string name="purge_title">Delete earlier entries?</string>
+    <string name="purge_text">There are %2$d entries (status, notes, skipped days) before the new start date (%1$s). They will be deleted permanently when you save.</string>
+    <string name="purge_confirm">Delete and save</string>
+    <string-array name="build_law_labels">
+        <item>Make it obvious</item>
+        <item>Make it attractive</item>
+        <item>Make it easy</item>
+        <item>Make it satisfying</item>
+    </string-array>
+    <string-array name="avoid_law_labels">
+        <item>Make it invisible</item>
+        <item>Make it unattractive</item>
+        <item>Make it difficult</item>
+        <item>Make it unsatisfying</item>
+    </string-array>
+    <string-array name="build_law_hints">
+        <item>When and where do you do it? What reminds you?</item>
+        <item>What do you pair it with so you enjoy it?</item>
+        <item>How do you make starting as easy as possible?</item>
+        <item>How do you reward yourself right after?</item>
+    </string-array>
+    <string-array name="avoid_law_hints">
+        <item>How do you remove the triggers from your surroundings?</item>
+        <item>What do you remind yourself of so it loses its appeal?</item>
+        <item>What obstacle do you put in front of it?</item>
+        <item>What consequence makes it unpleasant?</item>
+    </string-array>
+
+    <!-- Schedule and reminder summaries -->
+    <string name="schedule_daily">Daily</string>
+    <string name="schedule_no_days">No days</string>
+    <string name="schedule_per_week">%1$d× per week</string>
+    <string name="reminder_max_per_day">max. %1$d×/day</string>
+    <string name="reminder_no_times">No times</string>
+    <string name="reminder_every">Every %1$d min</string>
+    <string name="reminder_random">Random %1$d–%2$d min</string>
+    <string name="reminder_daily">daily</string>
+
+    <!-- Habit detail -->
+    <string name="tap_day_to_correct">Tap a day to correct it afterwards.</string>
+    <string name="weekly_goals">Weekly goals</string>
+    <string name="week_number">Week %1$d</string>
+    <string name="my_strategy">My strategy</string>
+    <string name="streak_label">Days in a row</string>
+    <string name="this_week">This week</string>
+    <string name="days_30">30 days</string>
+    <string name="overall">Overall</string>
+    <string name="prev_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="skipped_sick">Skipped (e.g. sick)</string>
+    <string name="why_skip_required">Why are you skipping? *</string>
+
+    <!-- Statistics -->
+    <string name="stats_subtitle_overview">This week and the last 30 days</string>
+    <string name="stats_subtitle_notes">All notes at a glance</string>
+    <string name="overview">Overview</string>
+    <string name="no_data">No data yet.</string>
+    <string name="avg_rate">Ø success rate · 30 days</string>
+    <string name="stat_week">%1$d/%2$d week</string>
+    <string name="stat_days">%1$d days</string>
+
+    <!-- Notes -->
+    <string name="notes_empty">No notes yet.\nThey come from ticking off, from a slip or from a habit\'s calendar.</string>
+    <string name="search_notes">Search notes</string>
+    <string name="clear_search">Clear search</string>
+    <string name="filter_all">All</string>
+    <string name="filter_missed">Didn\'t work</string>
+    <string name="filter_done">Worked</string>
+    <string name="all_habits">All habits</string>
+    <plurals name="notes_count">
+        <item quantity="one">%d note</item>
+        <item quantity="other">%d notes</item>
+    </plurals>
+    <string name="notes_shown">%1$d of %2$d notes</string>
+    <string name="no_matches">No matches.</string>
+
+    <!-- Reminders -->
+    <string name="add_reminder">Add reminder</string>
+    <string name="reminders_empty">No reminders yet.\nThey can belong to a habit or stand on their own.</string>
+    <string name="reminder_off">Off</string>
+    <string name="reminder_paused_until">Paused until %1$s</string>
+    <string name="reminder_next">Next: %1$s</string>
+    <string name="reminder_nothing">Nothing planned</string>
+    <string name="reminder_default_title">Reminder</string>
+    <string name="end_pause">End pause</string>
+    <string name="pause_tomorrow">Pause until tomorrow</string>
+    <string name="reminder_edit_title">Edit reminder</string>
+    <string name="reminder_new_title">New reminder</string>
+    <string name="field_title">Title</string>
+    <string name="field_title_optional">Title (optional)</string>
+    <string name="link">Habit</string>
+    <string name="link_free">None</string>
+    <string name="reminder_never_ticks">A reminder never ticks off the habit automatically.</string>
+    <string name="mode">Mode</string>
+    <string name="mode_fixed">Fixed times</string>
+    <string name="mode_interval">Interval</string>
+    <string name="mode_random">Random interval</string>
+    <string name="times">Times</string>
+    <string name="add_time">+ Time</string>
+    <string name="every">Every</string>
+    <string name="earliest_after">Earliest after</string>
+    <string name="latest_after">Latest after</string>
+    <string name="suffix_min">" min"</string>
+    <string name="weekdays">Weekdays</string>
+    <string name="snooze_after">Remind again after</string>
+    <string name="from">From</string>
+    <string name="until">Until</string>
+    <string name="limit_per_day">Limit per day</string>
+    <string name="at_most">At most</string>
+
+    <!-- Notifications -->
+    <string name="channel_daily">Daily notifications</string>
+    <string name="notif_today">Today: %1$s</string>
+    <string name="notif_keep_going">Today you simply keep going.</string>
+    <string name="snooze_action">Later (%1$d min)</string>
+
+    <!-- Settings -->
+    <string name="appearance">Appearance</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="language">Language</string>
+    <string name="language_system">System</string>
+    <string name="language_de" translatable="false">Deutsch</string>
+    <string name="language_en" translatable="false">English</string>
+    <string name="material_you" translatable="false">Material You</string>
+    <string name="dynamic_on">Colors from your wallpaper</string>
+    <string name="dynamic_off">Only available on Android 12 and newer</string>
+    <string name="hints">Hints</string>
+    <string name="missed_hint_sub">A subtle hint when a habit slipped yesterday</string>
+    <string name="notifications">Notifications</string>
+    <string name="daily_overview">Daily overview</string>
+    <string name="daily_overview_sub">All of the day\'s habits, in the order of “Today”</string>
+    <string name="time">Time</string>
+    <string name="motivation_notif">Motivation after a missed habit</string>
+    <string name="motivation_notif_sub">Your own motivation when you missed a habit once</string>
+    <string name="backup">Backup</string>
+    <string name="backup_text">Saves habits, history, notes and reminders as a file. Importing replaces all current data.</string>
+    <string name="export">Export</string>
+    <string name="import_">Import</string>
+    <string name="csv_text">Analysis: a table (CSV) with one row per habit and day – status, success (1/0) and note. Opens directly in Excel or LibreOffice.</string>
+    <string name="csv_export">Export as table</string>
+    <string name="csv_file_prefix">ethos-analysis</string>
+    <string name="replace_title">Replace data?</string>
+    <string name="replace_text">All current data will be replaced by the backup. This can\'t be undone.</string>
+    <string name="replace">Replace</string>
+    <string name="msg_backup_saved">Backup saved.</string>
+    <string name="msg_table_saved">Table saved.</string>
+    <string name="msg_export_failed">Export failed: %1$s</string>
+    <string name="msg_restored">Backup restored (%1$d habits).</string>
+    <string name="msg_import_failed">Import failed: %1$s</string>
+    <string name="err_not_writable">File is not writable</string>
+    <string name="err_not_readable">File is not readable</string>
+
+    <!-- CSV export -->
+    <string-array name="csv_header">
+        <item>Date</item>
+        <item>Weekday</item>
+        <item>Habit</item>
+        <item>Type</item>
+        <item>Status</item>
+        <item>Success</item>
+        <item>Moved to</item>
+        <item>Note</item>
+        <item>Archived</item>
+    </string-array>
+    <!-- German Excel expects semicolons, English Excel commas. -->
+    <string name="csv_separator">,</string>
+    <string name="csv_skipped">Skipped</string>
+    <string name="csv_moved">Moved</string>
+    <string name="csv_open">Open</string>
+    <string name="csv_not_planned">Not planned</string>
+    <string name="csv_type_build">Build</string>
+    <string name="csv_type_avoid">Break</string>
+    <string name="csv_yes">yes</string>
+    <string name="csv_no">no</string>
 </resources>

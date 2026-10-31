@@ -15,8 +15,8 @@ android {
         applicationId = "com.example.ethos"
         minSdk = 30
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.1.1"
     }
 
     // Same key as the phone app (keystore.properties in the project root, not in git).

@@ -26,21 +26,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.R
 import com.example.ethos.ui.AppViewModelProvider
 import com.example.ethos.ui.components.EmptyState
 import com.example.ethos.ui.components.EthosCard
 import com.example.ethos.ui.components.EthosTopBar
 import com.example.ethos.ui.components.Pill
+import com.example.ethos.ui.localizedFormatter
 import com.example.ethos.ui.reminderSummary
 import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
-private val NEXT_FMT = DateTimeFormatter.ofPattern("EEE HH:mm", Locale.GERMAN)
+private val NEXT_FMT get() = localizedFormatter("EEE HH:mm", "EEE HH:mm")
 
 @Composable
 fun RemindersScreen(
@@ -53,17 +54,17 @@ fun RemindersScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             EthosTopBar(
-                title = "Erinnerungen",
+                title = stringResource(R.string.tab_reminders),
                 actions = {
                     IconButton(onClick = onAddReminder) {
-                        Icon(Icons.Default.Add, contentDescription = "Erinnerung hinzufügen")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_reminder))
                     }
                 },
             )
         },
     ) { padding ->
         if (items.isEmpty()) {
-            EmptyState("Noch keine Erinnerungen.\nSie können an ein Habit gebunden oder frei sein.", Modifier.padding(padding))
+            EmptyState(stringResource(R.string.reminders_empty), Modifier.padding(padding))
         } else {
             LazyColumn(
                 Modifier.padding(padding),
@@ -86,10 +87,10 @@ private fun ReminderCard(item: ReminderItem, vm: RemindersViewModel, onClick: ()
     val now = System.currentTimeMillis()
     val paused = r.pausedUntil != null && r.pausedUntil > now
     val (status, statusColor) = when {
-        !r.isEnabled -> "Aus" to cs.onSurfaceVariant
-        paused -> "Pausiert bis ${fmt(r.pausedUntil!!)}" to cs.tertiary
-        r.nextTriggerAt != null -> "Nächste: ${fmt(r.nextTriggerAt)}" to cs.primary
-        else -> "Nichts geplant" to cs.onSurfaceVariant
+        !r.isEnabled -> stringResource(R.string.reminder_off) to cs.onSurfaceVariant
+        paused -> stringResource(R.string.reminder_paused_until, fmt(r.pausedUntil!!)) to cs.tertiary
+        r.nextTriggerAt != null -> stringResource(R.string.reminder_next, fmt(r.nextTriggerAt)) to cs.primary
+        else -> stringResource(R.string.reminder_nothing) to cs.onSurfaceVariant
     }
     EthosCard(
         onClick = onClick,
@@ -97,7 +98,7 @@ private fun ReminderCard(item: ReminderItem, vm: RemindersViewModel, onClick: ()
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(r.title.ifBlank { item.habitTitle ?: "Erinnerung" }, style = MaterialTheme.typography.titleMedium)
+                Text(r.title.ifBlank { item.habitTitle ?: stringResource(R.string.reminder_default_title) }, style = MaterialTheme.typography.titleMedium)
                 Text(
                     listOfNotNull(item.habitTitle?.takeIf { r.title.isNotBlank() }, reminderSummary(r)).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
@@ -107,15 +108,15 @@ private fun ReminderCard(item: ReminderItem, vm: RemindersViewModel, onClick: ()
             }
             Switch(checked = r.isEnabled, onCheckedChange = { vm.setEnabled(r, it) })
             Box {
-                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Mehr") }
+                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more)) }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text = { Text("Bearbeiten") }, onClick = { menu = false; onClick() })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.edit)) }, onClick = { menu = false; onClick() })
                     if (paused) {
-                        DropdownMenuItem(text = { Text("Pause beenden") }, onClick = { menu = false; vm.resume(r) })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.end_pause)) }, onClick = { menu = false; vm.resume(r) })
                     } else {
-                        DropdownMenuItem(text = { Text("Bis morgen pausieren") }, onClick = { menu = false; vm.pauseUntilTomorrow(r) })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.pause_tomorrow)) }, onClick = { menu = false; vm.pauseUntilTomorrow(r) })
                     }
-                    DropdownMenuItem(text = { Text("Löschen") }, onClick = { menu = false; vm.delete(r) })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { menu = false; vm.delete(r) })
                 }
             }
         }

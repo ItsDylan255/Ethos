@@ -39,32 +39,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.R
 import com.example.ethos.data.ExceptionKind
 import com.example.ethos.data.HabitType
 import com.example.ethos.data.LogStatus
 import com.example.ethos.domain.DayState
-import com.example.ethos.ui.AVOID_LAW_LABELS
 import com.example.ethos.ui.AppViewModelProvider
-import com.example.ethos.ui.BUILD_LAW_LABELS
 import com.example.ethos.ui.WEEKDAY_SHORT
 import com.example.ethos.ui.components.CardTitle
 import com.example.ethos.ui.components.EthosCard
 import com.example.ethos.ui.components.EthosTopBar
 import com.example.ethos.ui.displayTitle
+import com.example.ethos.ui.localizedFormatter
 import com.example.ethos.ui.scheduleSummary
 import com.example.ethos.ui.theme.typeColor
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
-private val MONTH_FMT = DateTimeFormatter.ofPattern("LLLL yyyy", Locale.GERMAN)
-private val DAY_FMT = DateTimeFormatter.ofPattern("EEEE, d. MMMM", Locale.GERMAN)
+private val MONTH_FMT get() = localizedFormatter("LLLL yyyy", "LLLL yyyy")
+private val DAY_FMT get() = localizedFormatter("EEEE, d. MMMM", "EEEE, MMMM d")
 
 @Composable
 fun HabitDetailScreen(
@@ -86,7 +86,7 @@ fun HabitDetailScreen(
                 actions = {
                     if (s != null) {
                         IconButton(onClick = { onEdit(s.habit.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Bearbeiten")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
                         }
                     }
                 },
@@ -113,7 +113,7 @@ fun HabitDetailScreen(
                 )
                 MonthGrid(s, accent, onPick = { editing = it })
                 Text(
-                    "Tippe auf einen Tag, um ihn nachträglich zu korrigieren.",
+                    stringResource(R.string.tap_day_to_correct),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -121,12 +121,12 @@ fun HabitDetailScreen(
 
             if (s.weeks.isNotEmpty()) {
                 EthosCard(spacing = 10.dp) {
-                    CardTitle("Wochenziele")
+                    CardTitle(stringResource(R.string.weekly_goals))
                     s.weeks.forEach { w ->
                         Row(Modifier.fillMaxWidth()) {
-                            Text("KW ${w.weekNumber}", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.week_number, w.weekNumber), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                             Text(
-                                "${w.done} von ${w.target}" + (if (w.extra > 0) " (+${w.extra})" else "") + if (w.met) "  ✓" else "",
+                                stringResource(R.string.x_of_y, w.done, w.target) + (if (w.extra > 0) " (+${w.extra})" else "") + if (w.met) "  ✓" else "",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = if (w.met) accent else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -137,7 +137,7 @@ fun HabitDetailScreen(
 
             if (s.notes.isNotEmpty()) {
                 EthosCard(spacing = 12.dp) {
-                    CardTitle("Notizen")
+                    CardTitle(stringResource(R.string.notes))
                     s.notes.entries.sortedByDescending { it.key.toEpochDay() }.take(10).forEach { (date, text) ->
                         Column(
                             Modifier.fillMaxWidth().clickable { editing = date },
@@ -156,16 +156,16 @@ fun HabitDetailScreen(
 
             if (s.habit.motivation.isNotBlank()) {
                 EthosCard(spacing = 8.dp) {
-                    CardTitle("Motivation")
+                    CardTitle(stringResource(R.string.motivation))
                     Text(s.habit.motivation, style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
             val laws = listOf(s.habit.law1, s.habit.law2, s.habit.law3, s.habit.law4)
             if (laws.any { it.isNotBlank() }) {
-                val labels = if (s.habit.type == HabitType.BUILD) BUILD_LAW_LABELS else AVOID_LAW_LABELS
+                val labels = stringArrayResource(if (s.habit.type == HabitType.BUILD) R.array.build_law_labels else R.array.avoid_law_labels)
                 EthosCard(spacing = 12.dp) {
-                    CardTitle("Meine Strategie")
+                    CardTitle(stringResource(R.string.my_strategy))
                     laws.forEachIndexed { index, text ->
                         if (text.isNotBlank()) {
                             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -202,12 +202,12 @@ fun HabitDetailScreen(
 
 @Composable
 private fun SummaryRow(s: DetailUiState, accent: Color) {
-    val first = if (s.streak != null) "${s.streak}" to "Tage in Folge"
-    else "${s.weekDone ?: 0}/${s.weekTarget ?: s.schedule?.weeklyTarget ?: 1}" to "Diese Woche"
+    val first = if (s.streak != null) "${s.streak}" to stringResource(R.string.streak_label)
+    else "${s.weekDone ?: 0}/${s.weekTarget ?: s.schedule?.weeklyTarget ?: 1}" to stringResource(R.string.this_week)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         StatCell(first.first, first.second, accent, Modifier.weight(1f))
-        StatCell(s.rate30?.let { "$it %" } ?: "–", "30 Tage", accent, Modifier.weight(1f))
-        StatCell(s.rateAll?.let { "$it %" } ?: "–", "Gesamt", accent, Modifier.weight(1f))
+        StatCell(percent(s.rate30), stringResource(R.string.days_30), accent, Modifier.weight(1f))
+        StatCell(percent(s.rateAll), stringResource(R.string.overall), accent, Modifier.weight(1f))
     }
 }
 
@@ -226,7 +226,7 @@ private fun StatCell(value: String, label: String, accent: Color, modifier: Modi
 @Composable
 private fun MonthHeader(month: YearMonth, canGoForward: Boolean, onPrevious: () -> Unit, onNext: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = onPrevious) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Vorheriger Monat") }
+        IconButton(onClick = onPrevious) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.prev_month)) }
         Text(
             month.format(MONTH_FMT),
             Modifier.weight(1f),
@@ -234,7 +234,7 @@ private fun MonthHeader(month: YearMonth, canGoForward: Boolean, onPrevious: () 
             style = MaterialTheme.typography.titleMedium,
         )
         IconButton(onClick = onNext, enabled = canGoForward) {
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Nächster Monat")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.next_month))
         }
     }
 }
@@ -339,6 +339,10 @@ private fun DayCell(
     }
 }
 
+/** Percentage in the app language ("80 %" / "80%"), or a dash without data. */
+@Composable
+fun percent(value: Int?): String = value?.let { stringResource(R.string.percent, it) } ?: "–"
+
 private data class DayOption(val status: LogStatus?, val skipped: Boolean, val label: String)
 
 @Composable
@@ -354,18 +358,24 @@ private fun CorrectionDialog(
     onUndoMove: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val skipLabel = stringResource(R.string.skipped_sick)
     val options = if (type == HabitType.BUILD) {
+        val done = stringResource(R.string.status_done)
+        val notDone = stringResource(R.string.status_not_done)
+        val noEntry = stringResource(R.string.status_no_entry)
         buildList {
-            add(DayOption(LogStatus.COMPLETED, false, "Erledigt"))
-            add(DayOption(LogStatus.FAILED, false, "Nicht gemacht"))
-            add(DayOption(null, false, "Keine Angabe"))
-            if (canSkip) add(DayOption(null, true, "Ausgelassen (z. B. krank)"))
+            add(DayOption(LogStatus.COMPLETED, false, done))
+            add(DayOption(LogStatus.FAILED, false, notDone))
+            add(DayOption(null, false, noEntry))
+            if (canSkip) add(DayOption(null, true, skipLabel))
         }
     } else {
+        val avoided = stringResource(R.string.status_avoided)
+        val doneAnyway = stringResource(R.string.status_done_anyway)
         buildList {
-            add(DayOption(null, false, "Vermieden"))
-            add(DayOption(LogStatus.FAILED, false, "Doch gemacht"))
-            if (canSkip) add(DayOption(null, true, "Ausgelassen (z. B. krank)"))
+            add(DayOption(null, false, avoided))
+            add(DayOption(LogStatus.FAILED, false, doneAnyway))
+            if (canSkip) add(DayOption(null, true, skipLabel))
         }
     }
     var selected by remember {
@@ -384,12 +394,12 @@ private fun CorrectionDialog(
                 if (moveTarget != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            "Verschoben auf ${moveTarget.format(DAY_FMT)}",
+                            stringResource(R.string.moved_to, moveTarget.format(DAY_FMT)),
                             Modifier.weight(1f),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.tertiary,
                         )
-                        TextButton(onClick = onUndoMove) { Text("Aufheben") }
+                        TextButton(onClick = onUndoMove) { Text(stringResource(R.string.undo)) }
                     }
                 }
                 options.forEachIndexed { index, option ->
@@ -408,9 +418,9 @@ private fun CorrectionDialog(
                     label = {
                         Text(
                             when {
-                                choice.skipped -> "Warum lässt du aus? *"
-                                choice.status == LogStatus.FAILED -> "Warum hat es nicht geklappt?"
-                                else -> "Notiz (optional)"
+                                choice.skipped -> stringResource(R.string.why_skip_required)
+                                choice.status == LogStatus.FAILED -> stringResource(R.string.why_failed)
+                                else -> stringResource(R.string.note_optional)
                             },
                         )
                     },
@@ -424,8 +434,8 @@ private fun CorrectionDialog(
             TextButton(
                 enabled = !choice.skipped || note.isNotBlank(),
                 onClick = { onSave(choice.status, note, choice.skipped) },
-            ) { Text("Speichern") }
+            ) { Text(stringResource(R.string.save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

@@ -57,8 +57,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.ethos.R
 import com.example.ethos.data.HabitType
 import com.example.ethos.ui.DATE_FMT
 import com.example.ethos.ui.theme.typeColor
@@ -97,7 +99,7 @@ fun EthosTopBar(
         navigationIcon = {
             if (onBack != null) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
             }
         },
@@ -206,13 +208,13 @@ fun OptionalDateField(label: String, date: LocalDate?, onChange: (LocalDate?) ->
     ) {
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Text(
-            date?.format(DATE_FMT) ?: "Keine",
+            date?.format(DATE_FMT) ?: stringResource(R.string.none),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
         )
         if (date != null) {
             IconButton(onClick = { onChange(null) }, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Default.Close, contentDescription = "Entfernen", modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.remove), modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -228,9 +230,9 @@ fun OptionalDateField(label: String, date: LocalDate?, onChange: (LocalDate?) ->
                         onChange(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate())
                     }
                     open = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
-            dismissButton = { TextButton(onClick = { open = false }) { Text("Abbrechen") } },
+            dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.cancel)) } },
         ) { DatePicker(state = state) }
     }
 }
@@ -242,9 +244,9 @@ fun TimePickerDialog(initial: LocalTime, onConfirm: (LocalTime) -> Unit, onDismi
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) }) { Text("OK") }
+            TextButton(onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) }) { Text(stringResource(R.string.ok)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
         text = { TimePicker(state = state) },
     )
 }
@@ -396,8 +398,8 @@ fun FutureDatePickerDialog(minDate: LocalDate, onPick: (LocalDate) -> Unit, onDi
                 state.selectedDateMillis?.let {
                     onPick(Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate())
                 }
-            }) { Text("Verschieben") }
+            }) { Text(stringResource(R.string.move)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     ) { DatePicker(state = state) }
 }

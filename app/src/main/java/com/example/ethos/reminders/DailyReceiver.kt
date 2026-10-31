@@ -12,6 +12,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.ethos.EthosApp
 import com.example.ethos.MainActivity
 import com.example.ethos.R
+import com.example.ethos.data.localized
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -23,7 +24,8 @@ object DailyNotifier {
     const val MOTIVATION_ID = 2_000_002
 
     fun ensureChannel(context: Context) {
-        val channel = NotificationChannel(CHANNEL_ID, "Tägliche Hinweise", NotificationManager.IMPORTANCE_DEFAULT)
+        val name = context.localized().getString(R.string.channel_daily)
+        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT)
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
@@ -67,6 +69,7 @@ class DailyReceiver : BroadcastReceiver() {
     private suspend fun handle(app: EthosApp, action: String?) {
         val container = app.container
         val settings = container.settings.settings.first()
+        val res = app.localized().resources
         when (action) {
             DailyScheduler.ACTION_REPORT -> if (settings.dailyReportEnabled) {
                 val habits = container.repository.habitsDueToday()
@@ -74,7 +77,7 @@ class DailyReceiver : BroadcastReceiver() {
                     DailyNotifier.show(
                         app,
                         DailyNotifier.REPORT_ID,
-                        title = "Heute: ${count(habits.size)}",
+                        title = res.getString(R.string.notif_today, res.getQuantityString(R.plurals.habit_count, habits.size, habits.size)),
                         summary = habits.joinToString(", ") { it.title },
                         lines = habits.map { "• ${it.title}" },
                     )
@@ -87,9 +90,9 @@ class DailyReceiver : BroadcastReceiver() {
                     DailyNotifier.show(
                         app,
                         DailyNotifier.MOTIVATION_ID,
-                        title = "Nie zweimal verpassen",
+                        title = res.getString(R.string.never_miss_twice),
                         summary = missed.joinToString(", ") { it.title },
-                        lines = missed.map { it.title + ": " + it.motivation.ifBlank { "Heute machst du einfach weiter." } },
+                        lines = missed.map { it.title + ": " + it.motivation.ifBlank { res.getString(R.string.notif_keep_going) } },
                     )
                 }
             }
@@ -97,6 +100,4 @@ class DailyReceiver : BroadcastReceiver() {
         // Plan the next day.
         container.dailyScheduler.scheduleAll(settings)
     }
-
-    private fun count(n: Int) = if (n == 1) "1 Gewohnheit" else "$n Gewohnheiten"
 }

@@ -36,16 +36,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.R
 import com.example.ethos.data.HabitType
 import com.example.ethos.data.RecurrenceType
-import com.example.ethos.ui.AVOID_LAW_HINTS
-import com.example.ethos.ui.AVOID_LAW_LABELS
 import com.example.ethos.ui.AppViewModelProvider
-import com.example.ethos.ui.BUILD_LAW_HINTS
-import com.example.ethos.ui.BUILD_LAW_LABELS
 import com.example.ethos.ui.DATE_FMT
 import com.example.ethos.ui.WEEKDAY_SHORT
 import com.example.ethos.ui.components.CardTitle
@@ -70,17 +69,17 @@ fun HabitEditScreen(
     val accent = typeColor(form.type)
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmReset by remember { mutableStateOf(false) }
-    val lawLabels = if (isBuild) BUILD_LAW_LABELS else AVOID_LAW_LABELS
-    val lawHints = if (isBuild) BUILD_LAW_HINTS else AVOID_LAW_HINTS
+    val lawLabels = stringArrayResource(if (isBuild) R.array.build_law_labels else R.array.avoid_law_labels)
+    val lawHints = stringArrayResource(if (isBuild) R.array.build_law_hints else R.array.avoid_law_hints)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             EthosTopBar(
-                title = if (vm.isEditing) "Habit bearbeiten" else "Neues Habit",
+                title = stringResource(if (vm.isEditing) R.string.habit_edit_title else R.string.habit_new_title),
                 onBack = onBack,
                 actions = {
-                    TextButton(enabled = form.canSave, onClick = { vm.save(onBack) }) { Text("Speichern") }
+                    TextButton(enabled = form.canSave, onClick = { vm.save(onBack) }) { Text(stringResource(R.string.save)) }
                 },
             )
         },
@@ -97,14 +96,14 @@ fun HabitEditScreen(
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 TypeTile(
                     type = HabitType.BUILD,
-                    label = "Gute Gewohnheit aufbauen",
+                    label = stringResource(R.string.type_build_long),
                     selected = isBuild,
                     onClick = { vm.update { it.copy(type = HabitType.BUILD) } },
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
                 TypeTile(
                     type = HabitType.AVOID,
-                    label = "Schlechte Gewohnheit ablegen",
+                    label = stringResource(R.string.type_avoid_long),
                     selected = !isBuild,
                     onClick = { vm.update { it.copy(type = HabitType.AVOID) } },
                     modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -116,14 +115,14 @@ fun HabitEditScreen(
                 OutlinedTextField(
                     value = form.title,
                     onValueChange = { v -> vm.update { it.copy(title = v) } },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.field_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = form.description,
                     onValueChange = { v -> vm.update { it.copy(description = v) } },
-                    label = { Text("Beschreibung (optional)") },
+                    label = { Text(stringResource(R.string.field_description)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -131,9 +130,9 @@ fun HabitEditScreen(
             // The four laws
             EthosCard(spacing = 14.dp) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    CardTitle("Die vier Gesetze", Modifier.weight(1f))
+                    CardTitle(stringResource(R.string.four_laws), Modifier.weight(1f))
                     Pill(
-                        "${form.filledLaws} von 4",
+                        stringResource(R.string.laws_filled, form.filledLaws),
                         if (form.filledLaws == 4) accent else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -154,12 +153,12 @@ fun HabitEditScreen(
 
             // Personal motivation (shown when the habit was missed once)
             EthosCard(spacing = 12.dp) {
-                CardTitle("Motivation")
+                CardTitle(stringResource(R.string.motivation))
                 OutlinedTextField(
                     value = form.motivation,
                     onValueChange = { v -> vm.update { it.copy(motivation = v) } },
-                    label = { Text("Deine Motivation (optional)") },
-                    placeholder = { Text("Warum machst du das? Wofür lohnt es sich?") },
+                    label = { Text(stringResource(R.string.field_motivation)) },
+                    placeholder = { Text(stringResource(R.string.motivation_hint)) },
                     minLines = 3,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -167,7 +166,7 @@ fun HabitEditScreen(
 
             // Schedule
             EthosCard(spacing = 12.dp) {
-                CardTitle("Zeitplan")
+                CardTitle(stringResource(R.string.schedule))
                 val weekly = form.recurrence == RecurrenceType.TIMES_PER_WEEK
                 Row(
                     Modifier.fillMaxWidth(),
@@ -187,7 +186,7 @@ fun HabitEditScreen(
                 }
                 if (weekly) {
                     IntStepper(
-                        label = "Ziel pro Woche",
+                        label = stringResource(R.string.weekly_goal),
                         value = form.weeklyTarget,
                         onChange = { v -> vm.update { it.copy(weeklyTarget = v) } },
                         min = 1,
@@ -196,9 +195,9 @@ fun HabitEditScreen(
                     )
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Verpasstes nachholen", style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.catch_up), style = MaterialTheme.typography.bodyLarge)
                             Text(
-                                "Fehlende Einheiten der Vorwoche kommen dazu (höchstens +2)",
+                                stringResource(R.string.catch_up_hint),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -210,19 +209,19 @@ fun HabitEditScreen(
                     }
                 }
                 HairlineDivider()
-                OptionalDateField("Startdatum", form.startDate) { v -> vm.update { it.copy(startDate = v) } }
-                OptionalDateField("Enddatum", form.endDate) { v -> vm.update { it.copy(endDate = v) } }
+                OptionalDateField(stringResource(R.string.start_date), form.startDate) { v -> vm.update { it.copy(startDate = v) } }
+                OptionalDateField(stringResource(R.string.end_date), form.endDate) { v -> vm.update { it.copy(endDate = v) } }
             }
 
             if (vm.isEditing) {
                 // Own row: three buttons do not fit side by side on narrow screens.
-                TextButton(onClick = { confirmReset = true }) { Text("Statistik zurücksetzen") }
+                TextButton(onClick = { confirmReset = true }) { Text(stringResource(R.string.reset_stats)) }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(onClick = { vm.toggleArchive(onBack) }) {
-                        Text(if (form.isArchived) "Reaktivieren" else "Archivieren")
+                        Text(stringResource(if (form.isArchived) R.string.reactivate else R.string.archive))
                     }
                     TextButton(onClick = { confirmDelete = true }) {
-                        Text("Löschen", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -232,19 +231,16 @@ fun HabitEditScreen(
     if (confirmReset) {
         AlertDialog(
             onDismissRequest = { confirmReset = false },
-            title = { Text("Statistik zurücksetzen?") },
+            title = { Text(stringResource(R.string.reset_stats_title)) },
             text = {
-                Text(
-                    "Verlauf, Notizen und ausgelassene Tage werden gelöscht und das Habit startet heute neu. " +
-                        "Name, Beschreibung, Motivation und deine Strategien bleiben erhalten.",
-                )
+                Text(stringResource(R.string.reset_stats_text))
             },
             confirmButton = {
                 TextButton(onClick = { confirmReset = false; vm.resetStats() }) {
-                    Text("Zurücksetzen", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.reset), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Abbrechen") } },
+            dismissButton = { TextButton(onClick = { confirmReset = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 
@@ -252,33 +248,30 @@ fun HabitEditScreen(
         val start = form.startDate?.format(DATE_FMT).orEmpty()
         AlertDialog(
             onDismissRequest = vm::cancelPurge,
-            title = { Text("Frühere Einträge löschen?") },
+            title = { Text(stringResource(R.string.purge_title)) },
             text = {
-                Text(
-                    "Vor dem neuen Startdatum ($start) gibt es $count Einträge (Status, Notizen, ausgelassene Tage). " +
-                        "Sie werden beim Speichern endgültig gelöscht.",
-                )
+                Text(stringResource(R.string.purge_text, start, count))
             },
             confirmButton = {
                 TextButton(onClick = { vm.confirmPurge(onBack) }) {
-                    Text("Löschen und speichern", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.purge_confirm), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = vm::cancelPurge) { Text("Abbrechen") } },
+            dismissButton = { TextButton(onClick = vm::cancelPurge) { Text(stringResource(R.string.cancel)) } },
         )
     }
 
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("„${form.title}“ löschen?") },
-            text = { Text("Das Habit mit Verlauf, Notizen und Erinnerungen wird endgültig gelöscht. Zum Aufheben gibt es nur Archivieren.") },
+            title = { Text(stringResource(R.string.delete_habit_title, form.title)) },
+            text = { Text(stringResource(R.string.delete_habit_text)) },
             confirmButton = {
                 TextButton(onClick = { confirmDelete = false; vm.delete(onDeleted) }) {
-                    Text("Löschen", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Abbrechen") } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }
@@ -360,7 +353,7 @@ private fun FrequencyToggle(selected: Boolean, accent: Color, onClick: () -> Uni
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            "Mehrmals\npro Woche",
+            stringResource(R.string.several_per_week),
             style = MaterialTheme.typography.labelSmall,
             color = if (selected) cs.onPrimary else cs.onSurfaceVariant,
             textAlign = TextAlign.Center,

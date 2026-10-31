@@ -1,0 +1,23 @@
+<resources>
+    <string name="tile_label">Ethos – Heute</string>
+    <string name="today">Heute</string>
+    <string name="open_on_phone">Öffne Ethos auf dem Handy</string>
+    <string name="waiting_for_phone">Warte auf das Handy …</string>
+    <string name="nothing_today">Für heute ist nichts geplant.</string>
+    <string name="tile_nothing_today">Heute nichts geplant</string>
+    <string name="all_done">Alles geschafft</string>
+    <string name="open_list">Offen: %1$s</string>
+    <string name="done_of">%1$d von %2$d geschafft</string>
+    <string name="week_progress">%1$d von %2$d diese Woche</string>
+    <string name="status_done">Erledigt</string>
+    <string name="status_not_done">Nicht gemacht</string>
+    <string name="status_avoided">Vermieden</string>
+    <string name="status_done_anyway">Doch gemacht</string>
+    <string name="status_open">Offen</string>
+    <plurals name="streak_days">
+        <item quantity="one">%d Tag in Folge</item>
+        <item quantity="other">%d Tage in Folge</item>
+    </plurals>
+    <string name="phone_not_connected">Handy nicht verbunden</string>
+    <string name="phone_not_connected_unsaved">Handy nicht verbunden – nicht gespeichert</string>
+</resources>

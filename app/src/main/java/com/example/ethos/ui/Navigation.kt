@@ -1,5 +1,6 @@
 package com.example.ethos.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -26,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.ethos.R
 import com.example.ethos.ui.components.HairlineDivider
 import com.example.ethos.ui.habits.HabitEditScreen
 import com.example.ethos.ui.habits.HabitsScreen
@@ -51,13 +54,13 @@ object Routes {
     fun reminderEdit(id: Long = -1L) = "reminder_edit/$id"
 }
 
-private data class Tab(val route: String, val label: String, val icon: ImageVector)
+private data class Tab(val route: String, @StringRes val label: Int, val icon: ImageVector)
 
 private val tabs = listOf(
-    Tab(Routes.TODAY, "Heute", Icons.Default.CheckCircle),
-    Tab(Routes.HABITS, "Habits", Icons.AutoMirrored.Filled.List),
-    Tab(Routes.STATS, "Statistik", Icons.Default.DateRange),
-    Tab(Routes.REMINDERS, "Erinnerungen", Icons.Default.Notifications),
+    Tab(Routes.TODAY, R.string.tab_today, Icons.Default.CheckCircle),
+    Tab(Routes.HABITS, R.string.tab_habits, Icons.AutoMirrored.Filled.List),
+    Tab(Routes.STATS, R.string.tab_stats, Icons.Default.DateRange),
+    Tab(Routes.REMINDERS, R.string.tab_reminders, Icons.Default.Notifications),
 )
 
 private val idArg = listOf(navArgument("id") { type = NavType.LongType })
@@ -88,8 +91,8 @@ fun EthosRoot() {
                                         restoreState = true
                                     }
                                 },
-                                icon = { Icon(tab.icon, contentDescription = tab.label) },
-                                label = { Text(tab.label) },
+                                icon = { Icon(tab.icon, contentDescription = stringResource(tab.label)) },
+                                label = { Text(stringResource(tab.label)) },
                             )
                         }
                     }

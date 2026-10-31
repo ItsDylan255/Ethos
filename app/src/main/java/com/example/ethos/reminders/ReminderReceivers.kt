@@ -15,6 +15,7 @@ import com.example.ethos.R
 import com.example.ethos.data.HabitType
 import com.example.ethos.data.LogStatus
 import com.example.ethos.data.Reminder
+import com.example.ethos.data.localized
 import com.example.ethos.watch.WatchSync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,15 +27,17 @@ object ReminderNotifier {
     const val CHANNEL_ID = "reminders"
 
     fun ensureChannel(context: Context) {
-        val channel = NotificationChannel(CHANNEL_ID, "Erinnerungen", NotificationManager.IMPORTANCE_DEFAULT)
+        val name = context.localized().getString(R.string.tab_reminders)
+        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT)
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
-    /** [canComplete]: the reminder belongs to a habit you build that is not done today -> "Erledigt" button. */
+    /** [canComplete]: the reminder belongs to a habit you build that is not done today -> "done" button. */
     @SuppressLint("MissingPermission") // areNotificationsEnabled() covers permission + settings
     fun show(context: Context, reminder: Reminder, habitTitle: String?, canComplete: Boolean = false) {
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return
+        val res = context.localized().resources
 
         val open = PendingIntent.getActivity(
             context,
@@ -51,14 +54,14 @@ object ReminderNotifier {
                 .putExtra(ReminderScheduler.EXTRA_ID, reminder.id),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val title = reminder.title.ifBlank { habitTitle ?: "Erinnerung" }
+        val title = reminder.title.ifBlank { habitTitle ?: res.getString(R.string.reminder_default_title) }
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(habitTitle?.takeIf { it != title })
             .setContentIntent(open)
             .setAutoCancel(true)
-        // Actions are mirrored to the watch, so "Erledigt" works there as well.
+        // Actions are mirrored to the watch, so the done button works there as well.
         if (canComplete) {
             val done = PendingIntent.getBroadcast(
                 context,
@@ -68,9 +71,9 @@ object ReminderNotifier {
                     .putExtra(ReminderScheduler.EXTRA_ID, reminder.id),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
-            builder.addAction(0, "Erledigt", done)
+            builder.addAction(0, res.getString(R.string.status_done), done)
         }
-        builder.addAction(0, "Später (${reminder.snoozeMinutes} Min)", snooze)
+        builder.addAction(0, res.getString(R.string.snooze_action, reminder.snoozeMinutes), snooze)
         manager.notify(reminder.id.toInt(), builder.build())
     }
 }

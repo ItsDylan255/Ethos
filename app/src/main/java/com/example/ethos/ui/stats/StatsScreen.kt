@@ -28,10 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.R
 import com.example.ethos.domain.DayState
 import com.example.ethos.ui.AppViewModelProvider
 import com.example.ethos.ui.WEEKDAY_SHORT
@@ -54,14 +56,14 @@ fun StatsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             EthosTopBar(
-                title = "Statistik",
-                subtitle = if (tab == 0) "Diese Woche und die letzten 30 Tage" else "Alle Notizen auf einen Blick",
+                title = stringResource(R.string.tab_stats),
+                subtitle = stringResource(if (tab == 0) R.string.stats_subtitle_overview else R.string.stats_subtitle_notes),
             )
         },
     ) { padding ->
         Column(Modifier.padding(padding)) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
-                listOf("Übersicht", "Notizen").forEachIndexed { index, label ->
+                listOf(stringResource(R.string.overview), stringResource(R.string.notes)).forEachIndexed { index, label ->
                     SegmentedButton(
                         selected = tab == index,
                         onClick = { tab = index },
@@ -71,7 +73,7 @@ fun StatsScreen(
             }
             when {
                 tab == 1 -> NotesView()
-                items.isEmpty() -> EmptyState("Noch keine Daten.")
+                items.isEmpty() -> EmptyState(stringResource(R.string.no_data))
                 else -> LazyColumn(
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -91,8 +93,8 @@ private fun OverviewCard(items: List<StatItem>) {
     val rates = items.mapNotNull { it.rate30 }
     val average = if (rates.isEmpty()) null else rates.average().roundToInt()
     EthosCard(spacing = 8.dp) {
-        Text("Ø ERFOLGSQUOTE · 30 TAGE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(average?.let { "$it %" } ?: "–", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.avg_rate).uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(percent(average), style = MaterialTheme.typography.headlineMedium)
         ProgressBar((average ?: 0) / 100f, MaterialTheme.colorScheme.primary)
     }
 }
@@ -108,14 +110,14 @@ private fun StatCard(item: StatItem, onClick: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    item.rate30?.let { "$it %" } ?: "–",
+                    percent(item.rate30),
                     style = MaterialTheme.typography.headlineSmall,
                     color = accent,
                 )
                 val sub = when {
-                    item.weekTarget != null -> "${item.weekDone ?: 0}/${item.weekTarget} Woche"
-                    (item.streak ?: 0) >= 2 -> "${item.streak} Tage"
-                    else -> "30 Tage"
+                    item.weekTarget != null -> stringResource(R.string.stat_week, item.weekDone ?: 0, item.weekTarget)
+                    (item.streak ?: 0) >= 2 -> stringResource(R.string.stat_days, item.streak ?: 0)
+                    else -> stringResource(R.string.days_30)
                 }
                 Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

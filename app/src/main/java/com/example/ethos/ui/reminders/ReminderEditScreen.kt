@@ -38,10 +38,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.R
 import com.example.ethos.data.ReminderMode
 import com.example.ethos.ui.AppViewModelProvider
 import com.example.ethos.ui.displayTitle
@@ -84,9 +86,9 @@ fun ReminderEditScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             EthosTopBar(
-                title = if (vm.isEditing) "Erinnerung bearbeiten" else "Neue Erinnerung",
+                title = stringResource(if (vm.isEditing) R.string.reminder_edit_title else R.string.reminder_new_title),
                 onBack = onBack,
-                actions = { TextButton(enabled = form.canSave, onClick = ::onSave) { Text("Speichern") } },
+                actions = { TextButton(enabled = form.canSave, onClick = ::onSave) { Text(stringResource(R.string.save)) } },
             )
         },
     ) { padding ->
@@ -102,18 +104,18 @@ fun ReminderEditScreen(
             OutlinedTextField(
                 value = form.title,
                 onValueChange = { v -> vm.update { it.copy(title = v) } },
-                label = { Text(if (form.habitId == null) "Titel" else "Titel (optional)") },
+                label = { Text(stringResource(if (form.habitId == null) R.string.field_title else R.string.field_title_optional)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FormLabel("Verknüpfung")
+                FormLabel(stringResource(R.string.link))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
                         selected = form.habitId == null,
                         onClick = { vm.update { it.copy(habitId = null) } },
-                        label = { Text("Frei") },
+                        label = { Text(stringResource(R.string.link_free)) },
                     )
                     habits.forEach { h ->
                         FilterChip(
@@ -124,7 +126,7 @@ fun ReminderEditScreen(
                     }
                 }
                 Text(
-                    "Eine Erinnerung hakt das Habit nie automatisch ab.",
+                    stringResource(R.string.reminder_never_ticks),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -134,12 +136,12 @@ fun ReminderEditScreen(
 
           EthosCard(spacing = 14.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FormLabel("Modus")
+                FormLabel(stringResource(R.string.mode))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
-                        ReminderMode.FIXED_TIMES to "Feste Uhrzeiten",
-                        ReminderMode.FIXED_INTERVAL to "Intervall",
-                        ReminderMode.RANDOM_INTERVAL to "Zufälliges Intervall",
+                        ReminderMode.FIXED_TIMES to stringResource(R.string.mode_fixed),
+                        ReminderMode.FIXED_INTERVAL to stringResource(R.string.mode_interval),
+                        ReminderMode.RANDOM_INTERVAL to stringResource(R.string.mode_random),
                     ).forEach { (mode, label) ->
                         FilterChip(
                             selected = form.mode == mode,
@@ -152,7 +154,7 @@ fun ReminderEditScreen(
 
             when (form.mode) {
                 ReminderMode.FIXED_TIMES -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FormLabel("Uhrzeiten")
+                    FormLabel(stringResource(R.string.times))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         form.fixedTimes.forEachIndexed { index, time ->
                             InputChip(
@@ -162,7 +164,7 @@ fun ReminderEditScreen(
                                 trailingIcon = {
                                     Icon(
                                         Icons.Default.Close,
-                                        contentDescription = "Entfernen",
+                                        contentDescription = stringResource(R.string.remove),
                                         modifier = Modifier.size(18.dp).clickable {
                                             vm.update { it.copy(fixedTimes = it.fixedTimes.filterIndexed { i, _ -> i != index }) }
                                         },
@@ -170,16 +172,16 @@ fun ReminderEditScreen(
                                 },
                             )
                         }
-                        AssistChip(onClick = { timeDialog = -1 }, label = { Text("+ Zeit") })
+                        AssistChip(onClick = { timeDialog = -1 }, label = { Text(stringResource(R.string.add_time)) })
                     }
                 }
 
                 ReminderMode.FIXED_INTERVAL -> Column {
                     IntStepper(
-                        label = "Alle",
+                        label = stringResource(R.string.every),
                         value = form.intervalMin,
                         onChange = { v -> vm.update { it.copy(intervalMin = v) } },
-                        step = 15, min = 5, max = 720, suffix = " Min",
+                        step = 15, min = 5, max = 720, suffix = stringResource(R.string.suffix_min),
                     )
                     WindowFields(form.windowStart, form.windowEnd) { s, e -> vm.update { it.copy(windowStart = s, windowEnd = e) } }
                     DailyLimitFields(form.maxPerDay) { v -> vm.update { it.copy(maxPerDay = v) } }
@@ -187,16 +189,16 @@ fun ReminderEditScreen(
 
                 ReminderMode.RANDOM_INTERVAL -> Column {
                     IntStepper(
-                        label = "Frühestens nach",
+                        label = stringResource(R.string.earliest_after),
                         value = form.intervalMin,
                         onChange = { v -> vm.update { it.copy(intervalMin = v, intervalMax = it.intervalMax.coerceAtLeast(v)) } },
-                        step = 15, min = 5, max = 720, suffix = " Min",
+                        step = 15, min = 5, max = 720, suffix = stringResource(R.string.suffix_min),
                     )
                     IntStepper(
-                        label = "Spätestens nach",
+                        label = stringResource(R.string.latest_after),
                         value = form.intervalMax,
                         onChange = { v -> vm.update { it.copy(intervalMax = v.coerceAtLeast(it.intervalMin)) } },
-                        step = 15, min = 5, max = 1440, suffix = " Min",
+                        step = 15, min = 5, max = 1440, suffix = stringResource(R.string.suffix_min),
                     )
                     WindowFields(form.windowStart, form.windowEnd) { s, e -> vm.update { it.copy(windowStart = s, windowEnd = e) } }
                     DailyLimitFields(form.maxPerDay) { v -> vm.update { it.copy(maxPerDay = v) } }
@@ -207,15 +209,15 @@ fun ReminderEditScreen(
 
           EthosCard(spacing = 14.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FormLabel("Wochentage")
+                FormLabel(stringResource(R.string.weekdays))
                 WeekdayPicker(form.weekdays, onChange = { v -> vm.update { it.copy(weekdays = v) } })
             }
 
             IntStepper(
-                label = "Später erinnern nach",
+                label = stringResource(R.string.snooze_after),
                 value = form.snoozeMinutes,
                 onChange = { v -> vm.update { it.copy(snoozeMinutes = v) } },
-                step = 5, min = 5, max = 120, suffix = " Min",
+                step = 5, min = 5, max = 120, suffix = stringResource(R.string.suffix_min),
             )
           }
         }
@@ -240,8 +242,8 @@ fun ReminderEditScreen(
 @Composable
 private fun WindowFields(start: LocalTime, end: LocalTime, onChange: (LocalTime, LocalTime) -> Unit) {
     Column {
-        TimeField("Von", start) { onChange(it, end) }
-        TimeField("Bis", end) { onChange(start, it) }
+        TimeField(stringResource(R.string.from), start) { onChange(it, end) }
+        TimeField(stringResource(R.string.until), end) { onChange(start, it) }
     }
 }
 
@@ -250,12 +252,12 @@ private fun WindowFields(start: LocalTime, end: LocalTime, onChange: (LocalTime,
 private fun DailyLimitFields(maxPerDay: Int?, onChange: (Int?) -> Unit) {
     Column {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Maximal pro Tag begrenzen", Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.limit_per_day), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
             Switch(checked = maxPerDay != null, onCheckedChange = { onChange(if (it) 3 else null) })
         }
         if (maxPerDay != null) {
             IntStepper(
-                label = "Höchstens",
+                label = stringResource(R.string.at_most),
                 value = maxPerDay,
                 onChange = { onChange(it) },
                 min = 1,

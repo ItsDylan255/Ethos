@@ -1,4 +1,24 @@
 <resources>
-    <string name="app_name">Ethos</string>
-    <string name="tile_label">Ethos – Heute</string>
+    <string name="app_name" translatable="false">Ethos</string>
+    <string name="tile_label">Ethos – Today</string>
+    <string name="today">Today</string>
+    <string name="open_on_phone">Open Ethos on your phone</string>
+    <string name="waiting_for_phone">Waiting for the phone …</string>
+    <string name="nothing_today">Nothing is planned for today.</string>
+    <string name="tile_nothing_today">Nothing planned today</string>
+    <string name="all_done">All done</string>
+    <string name="open_list">Open: %1$s</string>
+    <string name="done_of">%1$d of %2$d done</string>
+    <string name="week_progress">%1$d of %2$d this week</string>
+    <string name="status_done">Done</string>
+    <string name="status_not_done">Not done</string>
+    <string name="status_avoided">Avoided</string>
+    <string name="status_done_anyway">Did it anyway</string>
+    <string name="status_open">Open</string>
+    <plurals name="streak_days">
+        <item quantity="one">%d day in a row</item>
+        <item quantity="other">%d days in a row</item>
+    </plurals>
+    <string name="phone_not_connected">Phone not connected</string>
+    <string name="phone_not_connected_unsaved">Phone not connected – not saved</string>
 </resources>

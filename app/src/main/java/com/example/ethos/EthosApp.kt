@@ -2,6 +2,7 @@ package com.example.ethos
 
 import android.app.Application
 import android.content.Context
+import com.example.ethos.data.AppLocale
 import com.example.ethos.data.EthosDatabase
 import com.example.ethos.data.EthosRepository
 import com.example.ethos.data.SettingsRepository
@@ -34,6 +35,7 @@ class EthosApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppLocale.wrap(this) // default locale for dates, also in receivers
         container = AppContainer(this)
         ReminderNotifier.ensureChannel(this)
         DailyNotifier.ensureChannel(this)

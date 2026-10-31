@@ -24,9 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ethos.R
 import com.example.ethos.domain.DayState
 import com.example.ethos.ui.AppViewModelProvider
 import com.example.ethos.ui.components.EmptyState
@@ -35,11 +38,10 @@ import com.example.ethos.ui.components.NoteDialog
 import com.example.ethos.ui.components.Pill
 import com.example.ethos.ui.components.SectionLabel
 import com.example.ethos.ui.displayTitle
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import com.example.ethos.ui.localizedFormatter
 
-private val MONTH_FMT = DateTimeFormatter.ofPattern("LLLL yyyy", Locale.GERMAN)
-private val NOTE_DATE_FMT = DateTimeFormatter.ofPattern("EEE, d. MMM", Locale.GERMAN)
+private val MONTH_FMT get() = localizedFormatter("LLLL yyyy", "LLLL yyyy")
+private val NOTE_DATE_FMT get() = localizedFormatter("EEE, d. MMM", "EEE, MMM d")
 
 /** All notes, newest first, grouped by month. Searchable and filterable by outcome and habit. */
 @Composable
@@ -50,7 +52,7 @@ fun NotesView(vm: NotesViewModel = viewModel(factory = AppViewModelProvider.Fact
     val cs = MaterialTheme.colorScheme
 
     if (state.total == 0) {
-        EmptyState("Noch keine Notizen.\nSie entstehen beim Abhaken, bei einem Rückfall oder im Kalender eines Habits.")
+        EmptyState(stringResource(R.string.notes_empty))
     } else {
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
@@ -60,12 +62,12 @@ fun NotesView(vm: NotesViewModel = viewModel(factory = AppViewModelProvider.Fact
                 OutlinedTextField(
                     value = queryText,
                     onValueChange = { queryText = it; vm.setQuery(it) },
-                    placeholder = { Text("Notizen durchsuchen") },
+                    placeholder = { Text(stringResource(R.string.search_notes)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = {
                         if (queryText.isNotEmpty()) {
                             IconButton(onClick = { queryText = ""; vm.setQuery("") }) {
-                                Icon(Icons.Default.Close, contentDescription = "Suche löschen")
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.clear_search))
                             }
                         }
                     },
@@ -76,9 +78,9 @@ fun NotesView(vm: NotesViewModel = viewModel(factory = AppViewModelProvider.Fact
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
-                        NoteFilter.ALL to "Alle",
-                        NoteFilter.MISSED to "Nicht geklappt",
-                        NoteFilter.DONE to "Geklappt",
+                        NoteFilter.ALL to stringResource(R.string.filter_all),
+                        NoteFilter.MISSED to stringResource(R.string.filter_missed),
+                        NoteFilter.DONE to stringResource(R.string.filter_done),
                     ).forEach { (filter, label) ->
                         FilterChip(
                             selected = state.filter == filter,
@@ -95,7 +97,7 @@ fun NotesView(vm: NotesViewModel = viewModel(factory = AppViewModelProvider.Fact
                             FilterChip(
                                 selected = state.habitId == null,
                                 onClick = { vm.setHabit(null) },
-                                label = { Text("Alle Habits") },
+                                label = { Text(stringResource(R.string.all_habits)) },
                             )
                         }
                         items(state.habits, key = { it.id }) { habit ->
@@ -110,13 +112,14 @@ fun NotesView(vm: NotesViewModel = viewModel(factory = AppViewModelProvider.Fact
             }
             item {
                 Text(
-                    if (state.shown == state.total) "${state.total} Notizen" else "${state.shown} von ${state.total} Notizen",
+                    if (state.shown == state.total) pluralStringResource(R.plurals.notes_count, state.total, state.total)
+                    else stringResource(R.string.notes_shown, state.shown, state.total),
                     style = MaterialTheme.typography.bodySmall,
                     color = cs.onSurfaceVariant,
                 )
             }
             if (state.groups.isEmpty()) {
-                item { EmptyState("Keine Treffer.", Modifier.padding(vertical = 32.dp)) }
+                item { EmptyState(stringResource(R.string.no_matches), Modifier.padding(vertical = 32.dp)) }
             }
             state.groups.forEach { group ->
                 item(key = "m${group.month}") { SectionLabel(group.month.format(MONTH_FMT), Modifier.padding(top = 6.dp)) }
@@ -128,7 +131,7 @@ fun NotesView(vm: NotesViewModel = viewModel(factory = AppViewModelProvider.Fact
     editing?.let { item ->
         NoteDialog(
             title = "${item.habit.title} · ${item.date.format(NOTE_DATE_FMT)}",
-            label = "Notiz",
+            label = stringResource(R.string.note),
             initial = item.note.text,
             onSave = { vm.saveNote(item.habit.id, item.date, it); editing = null },
             onDismiss = { editing = null },
@@ -140,10 +143,10 @@ fun NotesView(vm: NotesViewModel = viewModel(factory = AppViewModelProvider.Fact
 private fun NoteCard(item: NoteItem, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val (label, color) = when (item.state) {
-        DayState.COMPLETED -> "Erledigt" to cs.primary
-        DayState.AVOIDED -> "Vermieden" to cs.tertiary
-        DayState.FAILED -> "Nicht geklappt" to cs.error
-        DayState.NOT_RECORDED -> "Keine Angabe" to cs.onSurfaceVariant
+        DayState.COMPLETED -> stringResource(R.string.status_done) to cs.primary
+        DayState.AVOIDED -> stringResource(R.string.status_avoided) to cs.tertiary
+        DayState.FAILED -> stringResource(R.string.filter_missed) to cs.error
+        DayState.NOT_RECORDED -> stringResource(R.string.status_no_entry) to cs.onSurfaceVariant
     }
     EthosCard(onClick = onClick, spacing = 8.dp) {
         Row(verticalAlignment = Alignment.CenterVertically) {
